@@ -1,0 +1,46 @@
+{
+
+    "env": {
+        "browser": true,
+        "es6": true,
+        "es2017": true
+    },
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 2019
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        "brace-style": ["warn", "1tbs"],
+        "camelcase": "warn",
+        "comma-dangle": "error",
+        "comma-spacing": "warn",
+        "complexity": ["error", 10],
+        "curly": "warn",
+        "dot-location": ["warn", "object"],
+        "eol-last": ["error", "always"],
+        "eqeqeq": "error",
+        "func-call-spacing": "error",
+        "func-style": ["error", "declaration", {"allowArrowFunctions": true}],
+        "indent": ["warn", 4, {"SwitchCase": 1}],
+        "new-cap": "error",
+        "new-parens": "error",
+        "no-console": "off",
+        "no-constant-condition": "warn",
+        "no-empty": "warn",
+        "no-eq-null": "error",
+        "no-implicit-coercion": "error",
+        "no-multi-spaces": "warn",
+        "no-shadow": "warn",
+        "no-undef": "warn",
+        "no-unreachable": "warn",
+        "no-unused-expressions": "warn",
+        "no-unused-vars": "warn",
+        "no-var": "error",
+        "quotes": ["error", "double"],
+        "semi": ["error", "always"],
+        "spaced-comment": ["warn", "always"],
+        "switch-colon-spacing": "warn",
+        "yoda": "warn"
+    }
+}

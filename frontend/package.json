@@ -1,0 +1,30 @@
+{
+    "name": "ieee-election-frontend",
+    "version": "1.0.0",
+    "description": "IEEE Online Election App Frontend",
+    "license": "UNLICENSED",
+    "author": "654wak654",
+    "scripts": {
+        "build": "node build.js",
+        "dev": "parcel src/index.html --port 5000"
+    },
+    "browserslist": [
+        "since 2019 and last 3 versions and > 0.1%"
+    ],
+    "dependencies": {
+        "@babel/runtime": "^7.10.2",
+        "@babel/runtime-corejs3": "^7.9.2",
+        "alpinejs": "^2.3.5",
+        "bulmaswatch": "^0.8.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.10.2",
+        "@babel/plugin-transform-runtime": "^7.10.1",
+        "@babel/preset-env": "^7.10.2",
+        "babel-preset-minify": "^0.5.1",
+        "browserslist": "^4.12.0",
+        "eslint": "^7.2.0",
+        "eslint-config-es": "^3.19.61",
+        "parcel": "^1.12.4"
+    }
+}

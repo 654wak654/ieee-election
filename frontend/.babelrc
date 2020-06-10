@@ -1,0 +1,30 @@
+{
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "useBuiltIns": "usage",
+                "corejs": {
+                    "version": 3,
+                    "proposals": true
+                }
+            }
+        ],
+        [
+            "minify",
+            {
+                "removeConsole": true,
+                "removeDebugger": true
+            }
+        ]
+    ],
+    "plugins": [
+        [
+            "@babel/plugin-transform-runtime",
+            {
+                "corejs": 3,
+                "useESModules": true
+            }
+        ]
+    ]
+}
