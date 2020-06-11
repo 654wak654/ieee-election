@@ -2,18 +2,18 @@
 
 ## Development
 
-Run this:
+Run both commands in parallel:
 ```
 npm run dev
+npm run start
 ```
 
 You good.
 
 ## Deployment
 
-Run this:
-```
-npm start
-```
+Run `npm run build` to make sure you have the latest frontend assets.
 
-The rest is coming soon™
+Then run `npm start` to start the websocket server.
+
+You'll need a web server like nginx or caddy to server the assets and proxy the server.
