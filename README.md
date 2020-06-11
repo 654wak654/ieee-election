@@ -5,7 +5,7 @@
 Run both commands in parallel:
 ```
 npm run dev
-npm run start
+npm start
 ```
 
 You good.
