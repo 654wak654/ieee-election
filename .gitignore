@@ -1,16 +1,12 @@
 # Parcel cache
-frontend/.cache/
+.cache/
 
 # IntelliJ IDEA and VS Code configs
-frontend/.idea/
-frontend/.vscode/
+.idea/
 .vscode/
 
 # Build output
-frontend/dist/
+dist/
 
 # Node modules
-frontend/node_modules/
-
-# pycache
-app/__pycache__/
+node_modules/

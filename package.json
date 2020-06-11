@@ -1,12 +1,13 @@
 {
-    "name": "ieee-election-frontend",
+    "name": "ieee-election",
     "version": "1.0.0",
-    "description": "IEEE Online Election App Frontend",
+    "description": "IEEE THKU Online Election App",
     "license": "UNLICENSED",
     "author": "654wak654",
     "scripts": {
-        "build": "node build.js",
-        "dev": "parcel src/index.html --port 5000"
+        "build": "node app/build.js",
+        "dev": "parcel src/index.html --port 5000",
+        "start": "node app/server.js"
     },
     "browserslist": [
         "since 2019 and last 3 versions and > 0.1%"
@@ -15,6 +16,7 @@
         "@babel/runtime": "^7.10.2",
         "@babel/runtime-corejs3": "^7.9.2",
         "alpinejs": "^2.3.5",
+        "bulma": "^0.9.0",
         "bulmaswatch": "^0.8.1"
     },
     "devDependencies": {
@@ -25,6 +27,9 @@
         "browserslist": "^4.12.0",
         "eslint": "^7.2.0",
         "eslint-config-es": "^3.19.61",
-        "parcel": "^1.12.4"
+        "lowdb": "^1.0.0",
+        "parcel": "^1.12.4",
+        "sass": "^1.26.8",
+        "ws": "^7.3.0"
     }
 }
