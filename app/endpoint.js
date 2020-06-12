@@ -15,11 +15,11 @@ class Endpoint {
     // noinspection JSUnusedGlobalSymbols
     auth({key}) {
         if (connections.includes(key)) {
-            ws.close(4000, "Already connected");
+            this.ws.close(4000, "Already connected");
         } else if (!keys.includes(key)) {
             return {ok: false};
         } else {
-            this.token = xxHash32(key + "padpadpad123");
+            this.token = xxHash32(`${key}padpadpad123`);
 
             return {ok: true, token: this.token};
         }

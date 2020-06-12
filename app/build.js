@@ -10,7 +10,7 @@ const Bundler = require("parcel");
         for (const filename of await fs.readdir("./dist")) {
             await fs.unlink(`./dist/${filename}`);
         }
-    } catch (error) {
+    } catch {
         console.info("dist doesn't exist, skipping");
     }
 

@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* eslint-disable padding-line-between-statements */
 
 const WebSocket = require("ws");
 const Endpoint = require("./endpoint");
@@ -15,7 +16,7 @@ wss.on("connection", ws => {
         try {
             // TODO: Replace json with https://www.npmjs.com/package/notepack.io
             message = JSON.parse(wsData);
-        } catch (e) {
+        } catch {
             ws.close(1003, "Invalid message");
             return;
         }
