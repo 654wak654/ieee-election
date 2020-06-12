@@ -23,12 +23,15 @@
         "@babel/core": "^7.10.2",
         "@babel/plugin-transform-runtime": "^7.10.1",
         "@babel/preset-env": "^7.10.2",
+        "@types/lowdb": "^1.0.0",
+        "@types/ws": "^7.2.5",
         "babel-preset-minify": "^0.5.1",
-        "browserslist": "^4.12.0",
         "eslint": "^7.2.0",
         "eslint-config-es": "^3.19.61",
+        "js-xxhash": "^1.0.4",
         "lowdb": "^1.0.0",
         "parcel": "^1.12.4",
+        "posthtml-include": "^1.4.3",
         "sass": "^1.26.8",
         "ws": "^7.3.0"
     }

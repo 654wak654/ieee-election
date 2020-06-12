@@ -1,37 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <title>IEEE THKU Election App</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-    <link href="style.sass" rel="stylesheet">
-    <!-- TODO: Favicon -->
-</head>
+<include src="common/head.html"></include>
+
+<!-- TODO: Make the back and forward buttons work (fuck?) -->
 
 <body>
-<section class="hero is-light is-fullheight">
-    <div class="hero-body">
-        <div class="container has-text-centered">
-            <div class="column is-4 is-offset-4">
-                <h3 class="title">Giriş</h3>
-                <hr class="login-hr has-background-black">
-                <div class="box is-marginless">
-                    <div class="field">
-                        <div class="control">
-                            <input class="input is-large" type="password" placeholder="Anahtarınız...">
+<div x-data="app()" x-init="init()">
+    <!-- TODO: Use x-if instead of x-show -->
+    <!-- TODO: Use x-transition for view changes -->
+    <section x-show="view === 'login'" class="hero is-light is-fullheight">
+        <div class="hero-body">
+            <div class="container">
+                <div class="column is-4 is-offset-4">
+                    <h3 class="title has-text-centered has-text-grey-dark">Giriş</h3>
+                    <hr class="login-hr has-background-grey-dark">
+                    <div class="box is-marginless">
+                        <div class="field">
+                            <label for="key" class="label is-medium">Anahtar:</label>
+                            <div class="control is-medium has-icons-left has-icons-right">
+                                <input
+                                        id="key" x-ref="key" type="password"
+                                        @keyup.enter.prevent="login()" @input="loginError = false"
+                                        class="input is-medium" :class="{'is-danger': loginError, 'is-dark': !loginError}"
+                                >
+                                <span class="icon is-left has-text-dark">
+                                    <i class="material-icons">vpn_key</i>
+                                </span>
+                                <span x-show="loginError" class="icon is-right has-text-danger">
+                                    <i class="material-icons">warning</i>
+                                </span>
+                            </div>
+                            <p x-show="loginError" class="help is-danger has-text-right">Hatalı anahtar girildi!</p>
                         </div>
+
+                        <!-- TODO: Add icon -->
+                        <button @click="login()" class="button is-primary is-medium is-fullwidth">Seçime Katıl</button>
                     </div>
-                    <input type="button" class="button is-primary is-large is-fullwidth" value="Seçime Katıl"/>
+
+                    <p @click="view = 'admin'" class="is-pulled-right has-text-link mt-2 is-clickable">Yönetici Paneli</p>
                 </div>
-                <a href="#" class="is-pulled-right has-text-link mt-2">Yönetici Paneli</a>
             </div>
         </div>
-    </div>
-</section>
 
-<script src="script.js"></script>
+        <include src="common/footer.html"></include>
+    </section>
+
+    <section x-show="view === 'home'" class="hero is-light is-fullheight">
+        <div class="hero-body">
+            <div class="container">
+                <div class="column is-8 is-offset-2">
+                    ey
+                </div>
+            </div>
+        </div>
+
+        <include src="common/footer.html"></include>
+    </section>
+</div>
+
+<script src="app.js"></script>
 </body>
-
 </html>
