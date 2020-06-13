@@ -28,6 +28,10 @@ class Endpoint {
     verify(token) {
         return token === this.token;
     }
+
+    signout() {
+        // TODO
+    }
 }
 
 module.exports = Endpoint;
