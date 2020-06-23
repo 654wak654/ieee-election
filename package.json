@@ -5,7 +5,7 @@
     "license": "UNLICENSED",
     "author": "654wak654",
     "scripts": {
-        "build": "node app/build.js",
+        "build": "node build.js",
         "dev": "parcel src/index.html --port 5000",
         "start": "node app/server.js"
     },
@@ -13,26 +13,26 @@
         "since 2019 and last 3 versions and > 0.1%"
     ],
     "dependencies": {
-        "@babel/runtime": "^7.10.2",
-        "@babel/runtime-corejs3": "^7.9.2",
-        "alpinejs": "^2.3.5",
+        "@babel/runtime": "^7.10.3",
+        "@babel/runtime-corejs3": "^7.10.3",
+        "alpinejs": "^2.4.1",
         "bulma": "^0.9.0",
         "bulmaswatch": "^0.8.1",
         "sha3": "^2.1.2"
     },
     "devDependencies": {
-        "@babel/core": "^7.10.2",
-        "@babel/plugin-transform-runtime": "^7.10.1",
-        "@babel/preset-env": "^7.10.2",
+        "@babel/core": "^7.10.3",
+        "@babel/plugin-transform-runtime": "^7.10.3",
+        "@babel/preset-env": "^7.10.3",
         "@types/lowdb": "^1.0.9",
         "@types/ws": "^7.2.5",
         "babel-preset-minify": "^0.5.1",
-        "eslint": "^7.2.0",
+        "eslint": "^7.3.1",
         "eslint-config-es": "^3.19.61",
         "lowdb": "^1.0.0",
         "parcel": "^1.12.4",
         "posthtml-include": "^1.4.3",
-        "sass": "^1.26.8",
+        "sass": "^1.26.9",
         "shortid": "^2.2.15",
         "ws": "^7.3.0"
     }
