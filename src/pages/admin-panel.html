@@ -42,83 +42,83 @@
             <p @click="page = 'admin-login'" class="is-pulled-right has-text-link mt-2 is-clickable">Çıkış Yap</p>
         </div>
     </div>
+</template>
 
-    <template x-if="modalElection !== null">
-        <div class="modal is-active">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title" x-text="modalElection.id ? 'Seçimi Düzenle' : 'Yeni Seçim Oluştur'"></p>
-                    <button class="delete" aria-label="close" @click="modalElection = null"></button>
-                </header>
+<template x-if="modalElection !== null">
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" x-text="modalElection.id ? 'Seçimi Düzenle' : 'Yeni Seçim Oluştur'"></p>
+                <button class="delete" aria-label="close" @click="modalElection = null"></button>
+            </header>
 
-                <section class="modal-card-body">
-                    <div class="field">
-                        <label class="label">Seçim İsmi</label>
-                        <div class="control">
-                            <input class="input" type="text" x-model="modalElection.name">
-                        </div>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Seçim İsmi</label>
+                    <div class="control">
+                        <input class="input" type="text" x-model="modalElection.name">
                     </div>
+                </div>
 
-                    <div class="container">
-                        <label class="label">Kategoriler</label>
-                        <button class="button is-primary is-fullwidth-mobile mb-4" @click="createCategory()">
-                            <span class="icon"><i class="material-icons">add_circle_outline</i></span>
-                            <span>Yeni Kategori Oluştur</span>
-                        </button>
+                <div class="container">
+                    <label class="label">Kategoriler</label>
+                    <button class="button is-primary is-fullwidth-mobile mb-4" @click="createCategory()">
+                        <span class="icon"><i class="material-icons">add_circle_outline</i></span>
+                        <span>Yeni Kategori Oluştur</span>
+                    </button>
 
-                        <template x-for="(category, index) in modalElection.categories" :key="category">
-                            <div class="card" :class="{'mb-4': index < modalElection.categories.length - 1}">
-                                <div class="card-content">
-                                    <div class="field">
-                                        <label class="label">Kategori İsmi</label>
-                                        <div class="control">
-                                            <input class="input" type="text" x-model="category.name" :autofocus="index === modalElection.categories.length - 1">
-                                        </div>
-                                    </div>
-
-                                    <label class="label">Adaylar</label>
-                                    <div class="tagsfield field input is-grouped is-grouped-multiline">
-                                        <div class="control">
-                                            <input type="hidden" :value="category.candidates.map(c => c.name).join(',')">
-                                            <span contenteditable></span>
-                                        </div>
+                    <template x-for="(category, index) in modalElection.categories" :key="category">
+                        <div class="card" :class="{'mb-4': index < modalElection.categories.length - 1}">
+                            <div class="card-content">
+                                <div class="field">
+                                    <label class="label">Kategori İsmi</label>
+                                    <div class="control">
+                                        <input class="input" type="text" x-model="category.name" :autofocus="index === modalElection.categories.length - 1">
                                     </div>
                                 </div>
-                                <footer class="card-footer">
-                                    <p
-                                            class="card-footer-item is-clickable has-text-weight-bold"
-                                            @click="moveCategory(index, index - 1)"
-                                    >
-                                        <span class="icon mr-1"><i class="material-icons">arrow_circle_up</i></span>
-                                        <span>Yukarı</span>
-                                    </p>
-                                    <p
-                                            class="card-footer-item is-clickable has-text-weight-bold"
-                                            @click="moveCategory(index, index + 1)"
-                                    >
-                                        <span class="icon mr-1"><i class="material-icons">arrow_circle_down</i></span>
-                                        <span>Aşağı</span>
-                                    </p>
-                                    <p
-                                            class="card-footer-item is-clickable has-text-weight-bold has-text-white-bis has-background-danger"
-                                            @click="removeCategory(index)"
-                                    >
-                                        <span class="icon"><i class="material-icons">delete</i></span>
-                                        <span>Sil</span>
-                                    </p>
-                                </footer>
+
+                                <label class="label">Adaylar</label>
+                                <div class="tagsfield field input is-grouped is-grouped-multiline">
+                                    <div class="control">
+                                        <input type="hidden" :value="category.candidates.map(c => c.name).join(',')">
+                                        <span contenteditable></span>
+                                    </div>
+                                </div>
                             </div>
-                        </template>
-                    </div>
-                </section>
-                <footer class="modal-card-foot has-content-justified-center">
-                    <button class="button is-success is-medium is-fullwidth-mobile" @click="saveElection()">
-                        <span class="icon"><i class="material-icons">save</i></span>
-                        <span>Kaydet</span>
-                    </button>
-                </footer>
-            </div>
+                            <footer class="card-footer">
+                                <p
+                                        class="card-footer-item is-clickable has-text-weight-bold"
+                                        @click="moveCategory(index, index - 1)"
+                                >
+                                    <span class="icon mr-1"><i class="material-icons">arrow_circle_up</i></span>
+                                    <span>Yukarı</span>
+                                </p>
+                                <p
+                                        class="card-footer-item is-clickable has-text-weight-bold"
+                                        @click="moveCategory(index, index + 1)"
+                                >
+                                    <span class="icon mr-1"><i class="material-icons">arrow_circle_down</i></span>
+                                    <span>Aşağı</span>
+                                </p>
+                                <p
+                                        class="card-footer-item is-clickable has-text-weight-bold has-text-white-bis has-background-danger"
+                                        @click="removeCategory(index)"
+                                >
+                                    <span class="icon"><i class="material-icons">delete</i></span>
+                                    <span>Sil</span>
+                                </p>
+                            </footer>
+                        </div>
+                    </template>
+                </div>
+            </section>
+            <footer class="modal-card-foot has-content-justified-center">
+                <button class="button is-success is-medium is-fullwidth-mobile" @click="saveElection()">
+                    <span class="icon"><i class="material-icons">save</i></span>
+                    <span>Kaydet</span>
+                </button>
+            </footer>
         </div>
-    </template>
+    </div>
 </template>
