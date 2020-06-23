@@ -1,28 +1,60 @@
 /* eslint-env node */
 
-const {xxHash32} = require("js-xxhash");
-const keys = require("./idk");
+const {SHA3} = require("sha3");
 
-const connections = [];
+const db = require("./db");
+
+const connections = {};
+const adminConnections = {};
+
+// TODO: We're keeping tokens in both endpoint.token + connection objects. Fix that?
 
 class Endpoint {
     constructor(ws) {
         this.ws = ws;
-
-        // TODO: Remove key on disconnect
     }
 
-    // noinspection JSUnusedGlobalSymbols
     auth({key}) {
-        if (connections.includes(key)) {
+        if (connections[key]) {
+            // TODO: Already connected shouldn't be this harsh, just send an error message
             this.ws.close(4000, "Already connected");
-        } else if (!keys.includes(key)) {
+        } else if (!db.activeElectionHasKey(key)) {
+            // TODO: Add error message this this too
             return {ok: false};
         } else {
-            this.token = xxHash32(`${key}padpadpad123`);
+            const token = this.getTokenFor(key);
+            connections[key] = token;
 
-            return {ok: true, token: this.token};
+            this.ws.on("close", () => connections[key] = null);
+
+            return token;
         }
+    }
+
+    adminAuth({username, password}) {
+        if (adminConnections[username]) {
+            // TODO: Same as above, send proper error message
+            this.ws.close(4000, "Already connected");
+        } else if (!db.adminSomething(username, password)) {
+            // TODO: Send error message too
+            return {ok: false};
+        } else {
+            const token = this.getTokenFor(password); // TODO: Is just the password enough?
+            adminConnections[username] = token;
+
+            this.ws.on("close", () => adminConnections[username] = null);
+
+            return token;
+        }
+    }
+
+    getTokenFor(string) {
+        const hash = new SHA3(256);
+        hash.update(`${string}${Math.random()}`);
+
+        this.token = hash.digest("hex");
+
+        return {ok: true, token: this.token};
     }
 
     verify(token) {

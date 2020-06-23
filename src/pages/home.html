@@ -1,3 +1,9 @@
-<div class="column is-8 is-offset-2">
-    ey
-</div>
+<template x-if="page === 'home'">
+    <div class="hero-body" x-transition:enter="page-transition" x-transition:enter-start="opacity-0"  x-transition:enter-end="opacity-100">
+        <div class="column is-4 is-offset-4">
+
+            <!-- TODO: This isn't just a back button it'll be a logout button -->
+            <p @click="page = 'login'" class="has-text-link is-clickable">Back</p>
+        </div>
+    </div>
+</template>

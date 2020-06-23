@@ -2,6 +2,7 @@
 /* eslint-disable padding-line-between-statements */
 
 const WebSocket = require("ws");
+
 const Endpoint = require("./endpoint");
 
 const wss = new WebSocket.Server({
@@ -14,7 +15,6 @@ wss.on("connection", ws => {
     ws.on("message", wsData => {
         let message;
         try {
-            // TODO: Replace json with https://www.npmjs.com/package/notepack.io
             message = JSON.parse(wsData);
         } catch {
             ws.close(1003, "Invalid message");
@@ -58,7 +58,8 @@ wss.on("connection", ws => {
             return;
         }
 
-        if (message.type !== "auth") {
+        // TODO: There is going to be a better way to do this once single-auth-per-connection is done
+        if (message.type !== "auth" && message.type !== "adminAuth") {
             if (!message.token) {
                 ws.close(1003, "Missing message token");
                 return;

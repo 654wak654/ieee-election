@@ -8,14 +8,27 @@
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <link href="style.sass" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- TODO: Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
 </head>
 
 <body>
 <div x-data="app()" x-init="init()">
-    <include src="common/glue.html" locals='{"page": "login"}'></include>
-    <include src="common/glue.html" locals='{"page": "home"}'></include>
-    <include src="common/glue.html" locals='{"page": "admin"}'></include>
+    <section class="hero is-fullheight">
+        <include src="pages/login.html"></include>
+        <include src="pages/home.html"></include>
+        <include src="pages/admin-login.html"></include>
+        <include src="pages/admin-panel.html"></include>
+
+        <footer class="hero-foot">
+            <div class="content has-text-centered">
+                <p class="mb-3">© 2020 Ozan Eğitmen</p>
+            </div>
+        </footer>
+    </section>
 </div>
 
 <script src="app.js"></script>

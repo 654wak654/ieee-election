@@ -1,21 +1,52 @@
 import "alpinejs";
+import {SHA3} from "sha3";
+import Tagsfield from "./tagsfield";
 
+// noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: false,
 
-    _page: "login",
-    _token: null,
+    _page: null,
+    _token: null, // TODO: Keep token in sessionStorage
     _queue: {},
-    _id: 1,
+    _queueId: 1,
+
+    // Admin panel variables
+    modalElection: null,
+    elections: [
+        {
+            id: "0",
+            name: "General election",
+            categories: [
+                {
+                    name: "Alpha Committee",
+                    candidates: [
+                        {
+                            id: 0, // TODO: Use shortid for this
+                            name: "Candidate Abcc",
+                            votes: 0 // TODO: Move this to a separate array called results
+                        },
+                        {
+                            id: 1, // TODO: Use shortid for this
+                            name: "Candidate Xyzz",
+                            votes: 0 // TODO: Move this to a separate array called results
+                        }
+                    ]
+                },
+                {
+                    name: "Bravo Committee",
+                    candidates: []
+                }
+            ]
+        }
+    ],
 
     init() {
-        // TODO: Init should check for navigation and stuff
-        // TODO: Set page to current url
-        // TODO: Handle disconnects and logouts
+        this.$watch("page", page => this.pageInits[page](this));
+        window.addEventListener("popstate", e => this.page = e.state);
 
-        window.addEventListener("popstate", event => {
-            console.log(event);
-        });
+        // Some initial route handing
+        this.page = window.location.pathname.slice(1);
 
         this.ws = new WebSocket("ws://127.0.0.1:5050");
 
@@ -35,27 +66,103 @@ window.app = () => ({
     },
 
     set page(page) {
+        // TODO: Handle security here
+        if (!this.pageInits[page]) {
+            page = "login";
+        }
+
         this._page = page;
 
-        history.pushState({}, "", page);
+        if (page !== history.state) {
+            history.pushState(page, "", page);
+        }
+
+        // Reset some ui stuff between pages
+        this.loginError = false;
+    },
+
+    pageInits: {
+        "login": t => t,
+        "admin-login": t => t,
+        "home": t => t,
+        "admin-panel": t => {
+            // TODO: Fill elections
+        }
     },
 
     sendMessage(type, data, callback) {
-        this.ws.send(JSON.stringify({id: this._id, token: this._token, type, data}));
+        this.ws.send(JSON.stringify({id: this._queueId, token: this._token, type, data}));
 
-        this._queue[this._id] = callback;
+        this._queue[this._queueId] = callback;
 
-        this._id++;
+        this._queueId++;
     },
 
     login() {
-        this.sendMessage("auth", {key: this.$refs.key.value}, ({ok, token}) => {
+        const hash = new SHA3(256);
+        hash.update(this.$refs.key.value);
+
+        this.sendMessage("auth", {key: hash.digest("hex")}, ({ok, token}) => {
             if (ok) {
                 this._token = token;
                 this.page = "home";
+            } else {
+                this.loginError = true;
             }
-
-            this.loginError = !ok;
         });
+    },
+
+    adminLogin() {
+        const hash = new SHA3(256);
+        hash.update(this.$refs.password.value);
+
+        this.sendMessage("adminAuth", {
+            username: this.$refs.username.value,
+            password: hash.digest("hex")
+        }, ({ok, token}) => {
+            if (ok) {
+                this._token = token;
+                this.page = "admin-panel";
+            } else {
+                this.loginError = true;
+            }
+        });
+    },
+
+    editElection(election) {
+        this.modalElection = election;
+
+        this.$nextTick(() => {
+            for (const tagsfield of document.querySelectorAll(".tagsfield")) {
+                new Tagsfield(tagsfield);
+            }
+        });
+    },
+
+    saveElection() {
+        // TODO: Send this.election to server
+    },
+
+    createCategory() {
+        this.modalElection.categories.push({name: "", candidates: []});
+
+        this.$nextTick(() => {
+            new Tagsfield(document.querySelector(".tagsfield:not(.ready)"));
+            document.querySelector("input[autofocus=\"autofocus\"]").focus();
+        });
+    },
+
+    moveCategory(index, moveTo) {
+        const categories = this.modalElection.categories;
+
+        if (moveTo < 0 || moveTo > categories.length - 1) {
+            return;
+        }
+
+        [categories[index], categories[moveTo]] = [categories[moveTo], categories[index]];
+    },
+
+    removeCategory(index) {
+        this.modalElection.categories.splice(index, 1);
     }
 });
