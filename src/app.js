@@ -90,43 +90,46 @@ window.app = () => ({
         }
     },
 
-    sendMessage(type, data, callback) {
-        this.ws.send(JSON.stringify({id: this._queueId, token: this._token, type, data}));
+    sendMessage(type, data) {
+        return new Promise(resolve => {
+            // noinspection JSUnresolvedVariable
+            this.ws.send(JSON.stringify({id: this._queueId, token: this._token, type, data}));
 
-        this._queue[this._queueId] = callback;
+            this._queue[this._queueId] = resolve;
 
-        this._queueId++;
+            this._queueId++;
+        });
     },
 
-    login() {
+    async login() {
         const hash = new SHA3(256);
         hash.update(this.$refs.key.value);
 
-        this.sendMessage("auth", {key: hash.digest("hex")}, ({ok, token}) => {
-            if (ok) {
-                this._token = token;
-                this.page = "home";
-            } else {
-                this.loginError = true;
-            }
-        });
+        const {ok, token} = await this.sendMessage("auth", {key: hash.digest("hex")});
+
+        if (ok) {
+            this._token = token;
+            this.page = "home";
+        } else {
+            this.loginError = true;
+        }
     },
 
-    adminLogin() {
+    async adminLogin() {
         const hash = new SHA3(256);
         hash.update(this.$refs.password.value);
 
-        this.sendMessage("adminAuth", {
+        const {ok, token} = await this.sendMessage("adminAuth", {
             username: this.$refs.username.value,
             password: hash.digest("hex")
-        }, ({ok, token}) => {
-            if (ok) {
-                this._token = token;
-                this.page = "admin-panel";
-            } else {
-                this.loginError = true;
-            }
         });
+
+        if (ok) {
+            this._token = token;
+            this.page = "admin-panel";
+        } else {
+            this.loginError = true;
+        }
     },
 
     editElection(election) {
