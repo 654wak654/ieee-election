@@ -2,7 +2,6 @@
 /* eslint-disable padding-line-between-statements */
 
 const WebSocket = require("ws");
-
 const Endpoint = require("./endpoint");
 
 const wss = new WebSocket.Server({
@@ -12,7 +11,7 @@ const wss = new WebSocket.Server({
 wss.on("connection", ws => {
     const endpoint = new Endpoint(ws);
 
-    ws.on("message", wsData => {
+    ws.on("message", async wsData => {
         let message;
         try {
             message = JSON.parse(wsData);
@@ -33,7 +32,7 @@ wss.on("connection", ws => {
             return;
         }
 
-        if (!endpoint[message.type]) {
+        if (!endpoint[message.type] || message.type === "constructor") {
             ws.close(1003, "Invalid message type");
             return;
         }
@@ -58,25 +57,27 @@ wss.on("connection", ws => {
             return;
         }
 
-        // TODO: There is going to be a better way to do this once single-auth-per-connection is done
         if (message.type !== "auth" && message.type !== "adminAuth") {
             if (!message.token) {
                 ws.close(1003, "Missing message token");
                 return;
             }
 
-            if (typeof message.token !== "number") {
-                ws.close(1003, "Message token must be a number");
+            if (typeof message.token !== "string") {
+                ws.close(1003, "Message token must be a string");
                 return;
             }
 
-            if (!endpoint.verify(message.token)) {
+            if (!endpoint.verify(message.token, message.type)) {
                 ws.close(1003, "Invalid message token");
                 return;
             }
         }
 
-        const response = endpoint[message.type](message.data);
+        const response = await endpoint[message.type](message.data);
+
+        console.log("response =", response);
+
         if (response) {
             ws.send(JSON.stringify({id: message.id, data: response}));
         }

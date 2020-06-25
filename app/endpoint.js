@@ -1,13 +1,9 @@
 /* eslint-env node */
 
 const {SHA3} = require("sha3");
-
 const db = require("./db");
 
-const connections = {};
-const adminConnections = {};
-
-// TODO: We're keeping tokens in both endpoint.token + connection objects. Fix that?
+const sessions = [];
 
 class Endpoint {
     constructor(ws) {
@@ -15,36 +11,26 @@ class Endpoint {
     }
 
     auth({key}) {
-        if (connections[key]) {
-            // TODO: Already connected shouldn't be this harsh, just send an error message
-            this.ws.close(4000, "Already connected");
-        } else if (!db.activeElectionHasKey(key)) {
-            // TODO: Add error message this this too
-            return {ok: false};
-        } else {
+        if (db.activeElectionHasKey(key)) {
             const token = this.getTokenFor(key);
-            connections[key] = token;
 
-            this.ws.on("close", () => connections[key] = null);
+            sessions.push({token, admin: false});
 
-            return token;
+            return {ok: true, token};
+        } else {
+            return {ok: false};
         }
     }
 
     adminAuth({username, password}) {
-        if (adminConnections[username]) {
-            // TODO: Same as above, send proper error message
-            this.ws.close(4000, "Already connected");
-        } else if (!db.adminSomething(username, password)) {
-            // TODO: Send error message too
-            return {ok: false};
+        if (db.hasAdmin(username, password)) {
+            const token = this.getTokenFor(password);
+
+            sessions.push({token, admin: true});
+
+            return {ok: true, token};
         } else {
-            const token = this.getTokenFor(password); // TODO: Is just the password enough?
-            adminConnections[username] = token;
-
-            this.ws.on("close", () => adminConnections[username] = null);
-
-            return token;
+            return {ok: false};
         }
     }
 
@@ -52,17 +38,39 @@ class Endpoint {
         const hash = new SHA3(256);
         hash.update(`${string}${Math.random()}`);
 
-        this.token = hash.digest("hex");
-
-        return {ok: true, token: this.token};
+        return hash.digest("hex");
     }
 
-    verify(token) {
-        return token === this.token;
+    verify(token, type) {
+        return sessions.some(session =>
+            session.token === token &&
+            [
+                "getElections", "createElection", "updateElection", "deleteElection"
+            ].includes(type) === session.admin
+        );
     }
 
-    signout() {
-        // TODO
+    signout(token) {
+        const index = sessions.findIndex(session => session.token === token);
+        if (index !== -1) {
+            sessions.splice(index, 1);
+        }
+    }
+
+    getElections() {
+        return db.getElections();
+    }
+
+    createElection({election}) {
+        return db.upsertElection(election);
+    }
+
+    updateElection({election}) {
+        return db.upsertElection(election);
+    }
+
+    deleteElection({id}) {
+        return db.deleteElection(id);
     }
 }
 

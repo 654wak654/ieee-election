@@ -9,29 +9,34 @@
                     <span>Seçim Listesi</span>
                 </p>
 
-                <!-- TODO: Fix condition for this using elections.find(e => e.active) -->
-                <div x-show="false" class="panel-block has-background-info-dark">
-                    <label for="active-election" class="label pr-2 has-text-light">Aktif Seçim:</label>
-                    <input id="active-election" class="input is-static has-text-light" type="text" readonly>
+                <div x-show="elections.some(e => e.active)" class="panel-block has-background-info-dark">
+                    <label class="label pr-2 has-text-light">Aktif Seçim:</label>
+                    <input class="input is-static has-text-light" type="text" :value="elections.find(e => e.active)?.name" readonly>
                 </div>
 
-                <!-- TODO: Fix condition for this using elections.find(e => e.active) -->
-                <div x-show="false" class="panel-block has-background-info-dark">
-                    <label for="admin" class="label pr-2 has-text-light">Yönetici:</label>
-                    <input id="admin" class="input is-static has-text-light" type="text" readonly>
+                <div x-show="elections.some(e => e.active)" class="panel-block has-background-info-dark">
+                    <label class="label pr-2 has-text-light">Yönetici:</label>
+                    <input class="input is-static has-text-light" type="text" :value="elections.find(e => e.active)?.moderator" readonly>
                 </div>
 
-                <!--
-                    TODO: Hover should show a 'manage {pen_icon}' thingy that puts a dark overlay on all of the element itself
-                     there is a dark overlay but it's not dark enough
-                 -->
-                <!-- TODO: Sticky manage and delete buttons at the right -->
-                <template x-for="elec in elections" :key="elec">
-                    <a class="panel-block" x-text="elec.name" @click="editElection(elec)"></a>
+                <template x-for="election in elections" :key="election">
+                    <div class="panel-block px-0">
+                        <a
+                                class="panel-block width-100 has-tooltip-arrow has-tooltip-left"
+                                data-tooltip="Seçimi Düzenle" x-text="election.name" @click="editElection(election)"
+                        ></a>
+                        <a class="button is-info has-tooltip-arrow" :data-tooltip="election.active ? 'Seçimi Durdur' : 'Seçimi Başlat'" @click="manageElection(election)">
+                            <span class="icon"><i class="material-icons" x-text="election.active ? 'pause_circle_outline' : 'play_circle_outline'"></i></span>
+                        </a>
+                        <a class="button is-danger has-tooltip-arrow" data-tooltip="Seçimi Sil" @click="deleteElection(election)">
+                            <span class="icon"><i class="material-icons">delete</i></span>
+                        </a>
+                    </div>
                 </template>
 
                 <div class="panel-block has-content-justified-center mt-2">
-                    <button @click="editElection({name: '', categories: []})" class="button is-primary is-medium is-fullwidth-mobile">
+                    <button class="button is-primary is-medium is-fullwidth-mobile"
+                            @click="editElection({name: '', status: 0, active: false, categories: [], keys: []})">
                         <span class="icon"><i class="material-icons">add_circle_outline</i></span>
                         <span>Yeni Seçim Oluştur</span>
                     </button>
@@ -45,7 +50,7 @@
 </template>
 
 <template x-if="modalElection !== null">
-    <div class="modal is-active">
+    <div class="modal is-active" @keyup.escape.window="modalElection = null">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -56,6 +61,22 @@
             <section class="modal-card-body">
                 <div class="field">
                     <label class="label">Seçim İsmi</label>
+                    <div class="control">
+                        <input class="input" type="text" x-model="modalElection.name">
+                    </div>
+                </div>
+
+                <!-- TODO: Number field and generate button -->
+                <div class="field">
+                    <label class="label">Seçim Anahtarları Sayısı</label>
+                    <div class="control">
+                        <input class="input" type="text" x-model="modalElection.name">
+                    </div>
+                </div>
+
+                <!-- TODO: This needs to be a text area with 3 line height -->
+                <div class="field">
+                    <label class="label">Seçim Anahtarları</label>
                     <div class="control">
                         <input class="input" type="text" x-model="modalElection.name">
                     </div>
@@ -114,10 +135,27 @@
                 </div>
             </section>
             <footer class="modal-card-foot has-content-justified-center">
-                <button class="button is-success is-medium is-fullwidth-mobile" @click="saveElection()">
+                <button class="button is-success is-medium is-fullwidth-mobile" :class="{'is-loading': savingElection}" @click="saveElection()">
                     <span class="icon"><i class="material-icons">save</i></span>
                     <span>Kaydet</span>
                 </button>
+            </footer>
+        </div>
+    </div>
+</template>
+
+<template x-if="modal !== null">
+    <div class="modal is-active" @keyup.escape.window="modal = null">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" x-text="modal.title"></p>
+                <button class="delete" aria-label="close" @click="modal = null"></button>
+            </header>
+            <section class="modal-card-body" x-text="modal.text"></section>
+            <footer class="modal-card-foot has-content-justified-right">
+                <button class="button is-medium" @click="modal = null">İptal</button>
+                <button x-show="modal.onAccept !== null" class="button is-medium is-danger" @click="modal.onAccept(); modal = null">Evet</button>
             </footer>
         </div>
     </div>

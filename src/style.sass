@@ -2,6 +2,8 @@
 @import "../node_modules/bulma"
 @import "../node_modules/bulmaswatch/yeti/overrides"
 
+@import "../node_modules/@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css"
+
 // Fix side scrollbar appearing for no reason
 html
   overflow-y: auto
@@ -28,6 +30,9 @@ body > div
   opacity: 100
 
 // Everything below is used for the admin-panel
+.width-100
+  width: 100%
+
 .modal.is-active
   animation: 0.25s ease-out 0s 1 normal both running fadein
 

@@ -7,49 +7,27 @@ window.app = () => ({
     loginError: false,
 
     _page: null,
-    _token: null, // TODO: Keep token in sessionStorage
     _queue: {},
     _queueId: 1,
 
     // Admin panel variables
     modalElection: null,
-    elections: [
-        {
-            id: "0",
-            name: "General election",
-            categories: [
-                {
-                    name: "Alpha Committee",
-                    candidates: [
-                        {
-                            id: 0, // TODO: Use shortid for this
-                            name: "Candidate Abcc",
-                            votes: 0 // TODO: Move this to a separate array called results
-                        },
-                        {
-                            id: 1, // TODO: Use shortid for this
-                            name: "Candidate Xyzz",
-                            votes: 0 // TODO: Move this to a separate array called results
-                        }
-                    ]
-                },
-                {
-                    name: "Bravo Committee",
-                    candidates: []
-                }
-            ]
-        }
-    ],
+    modal: null,
+    savingElection: false,
+    elections: [],
 
     init() {
-        this.$watch("page", page => this.pageInits[page](this));
-        window.addEventListener("popstate", e => this.page = e.state);
-
-        // Some initial route handing
-        this.page = window.location.pathname.slice(1);
-
         this.ws = new WebSocket("ws://127.0.0.1:5050");
 
+        this.ws.addEventListener("open", () => {
+            // TODO: Don't show page until this event
+
+            this.$watch("page", page => this.pageInits[page](this));
+            window.addEventListener("popstate", e => this.page = e.state);
+
+            // Some initial route handing
+            this.page = window.location.pathname.slice(1);
+        });
         this.ws.addEventListener("message", event => {
             const message = JSON.parse(event.data);
 
@@ -58,6 +36,12 @@ window.app = () => ({
             this._queue[message.id](message.data);
 
             delete this._queue[message.id];
+        });
+        this.ws.addEventListener("close", event => {
+            console.error(event);
+        });
+        this.ws.addEventListener("error", event => {
+            console.error(event);
         });
     },
 
@@ -81,24 +65,36 @@ window.app = () => ({
         this.loginError = false;
     },
 
+    get token() {
+        return sessionStorage.getItem("token");
+    },
+
+    set token(token) {
+        sessionStorage.setItem("token", token);
+    },
+
     pageInits: {
         "login": t => t,
         "admin-login": t => t,
         "home": t => t,
-        "admin-panel": t => {
-            // TODO: Fill elections
+        "admin-panel": async t => {
+            t.elections = await t.sendMessage("getElections");
         }
     },
 
-    sendMessage(type, data) {
+    sendMessage(type, data = {}) {
         return new Promise(resolve => {
             // noinspection JSUnresolvedVariable
-            this.ws.send(JSON.stringify({id: this._queueId, token: this._token, type, data}));
+            this.ws.send(JSON.stringify({id: this._queueId, token: this.token, type, data}));
 
             this._queue[this._queueId] = resolve;
 
             this._queueId++;
         });
+    },
+
+    showModal(title, text, onAccept = null) {
+        this.modal = {title, text, onAccept};
     },
 
     async login() {
@@ -108,7 +104,7 @@ window.app = () => ({
         const {ok, token} = await this.sendMessage("auth", {key: hash.digest("hex")});
 
         if (ok) {
-            this._token = token;
+            this.token = token;
             this.page = "home";
         } else {
             this.loginError = true;
@@ -125,11 +121,15 @@ window.app = () => ({
         });
 
         if (ok) {
-            this._token = token;
+            this.token = token;
             this.page = "admin-panel";
         } else {
             this.loginError = true;
         }
+    },
+
+    manageElection(election) {
+        // TODO
     },
 
     editElection(election) {
@@ -142,8 +142,34 @@ window.app = () => ({
         });
     },
 
-    saveElection() {
-        // TODO: Send this.election to server
+    async saveElection() {
+        if (this.savingElection) {
+            return;
+        }
+        this.savingElection = true;
+
+        const index = this.elections.indexOf(this.modalElection);
+        if (index === -1) {
+            this.modalElection.id = await this.sendMessage("createElection", this.modalElection);
+            this.elections.push(this.modalElection);
+        } else {
+            await this.sendMessage("updateElection", this.modalElection);
+        }
+
+        this.modalElection = null;
+        this.savingElection = false;
+    },
+
+    deleteElection(election) {
+        this.showModal("Seçimi Sil", `"${election.name}" isimli seçimi silmek istediğinize emin misiniz?`, () => {
+            // noinspection JSUnresolvedVariable
+            this.sendMessage("deleteElection", {id: election.id});
+
+            const index = this.elections.indexOf(election);
+            if (index !== -1) {
+                this.elections.splice(index, 1);
+            }
+        });
     },
 
     createCategory() {

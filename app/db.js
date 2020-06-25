@@ -1,5 +1,6 @@
 /* eslint-env node */
 
+const lodashId = require("lodash-id");
 const FileAsync = require("lowdb/adapters/FileAsync");
 const low = require("lowdb");
 const shortid = require("shortid");
@@ -9,27 +10,41 @@ const adapter = new FileAsync("db.json", {
         // TODO: The system would start with no election at all, this is just to define the structure
         elections: [
             {
-                id: 0, // TODO: Use shortid for this
-                name: "IEEE THKÜ Test Seçimi",
+                id: "0",
+                name: "General election",
+                // TODO: Keep status?
                 status: 0, // 0: created, 1: inprogress, 2: finished
                 active: true,
                 categories: [
                     {
-                        name: "XYZ committee",
+                        name: "Alpha Committee",
                         candidates: [
                             {
                                 id: 0, // TODO: Use shortid for this
-                                name: "Candidate Abc",
+                                name: "Candidate Abcc",
+                                votes: 0 // TODO: Move this to a separate array called results
+                            },
+                            {
+                                id: 1, // TODO: Use shortid for this
+                                name: "Candidate Xyzz",
                                 votes: 0 // TODO: Move this to a separate array called results
                             }
                         ]
+                    },
+                    {
+                        name: "Bravo Committee",
+                        candidates: []
                     }
                 ],
-                // TODO: Need a way to check if key voted in category
-                // TODO: Don't keep key on db, keep hash of key on db
-                keys: [
-                    "26a07bd8860a7832f6c35f344a7f14b353d36b4b74e5d40fd4ad892349280985"
-                ]
+                keys: [] // TODO: ?
+            },
+            {
+                id: "1",
+                name: "Waaat",
+                status: 0, // 0: created, 1: inprogress, 2: finished
+                active: false,
+                categories: [],
+                keys: [] // TODO: ?
             }
         ],
         admins: [
@@ -47,21 +62,38 @@ const adapter = new FileAsync("db.json", {
     }
 });
 
+// Make lodash-id use shortid
+lodashId.createId = shortid.generate;
+
 console.info("DB is initializing");
 let db = null;
 
 low(adapter).then(_db => {
     console.info("DB has been initialized");
     db = _db;
+    db._.mixin(lodashId); // Look at that cute face
 });
 
 module.exports = {
-    // TODO: Writes will be async
     activeElectionHasKey(key) {
         return db.get("elections").find({active: true}).get("keys").includes(key).value();
     },
 
-    adminSomething(username, password) {
+    hasAdmin(username, password) {
         return db.get("admins").some({"username": username, "password": password}).value();
+    },
+
+    getElections() {
+        return db.get("elections").value();
+    },
+
+    async upsertElection(election) {
+        const {id} = await db.get("elections").upsert(election).write();
+
+        return id;
+    },
+
+    async deleteElection(id) {
+        await db.get("elections").removeById(id).write();
     }
 };
