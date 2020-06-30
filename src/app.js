@@ -93,15 +93,16 @@ window.app = () => ({
             t.subTo("userVotes", data => {
                 const sortedData = [...data].sort((a, b) => a.order - b.order);
 
-                // TODO: Update notification
-
                 t.userVotes = sortedData;
                 const index = t.getCurrentUserVoteIndex();
                 t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
 
                 if (index === -1) {
                     t.modal = null;
-                    // TODO: Notification
+
+                    t.showNotification("😵 Oy vermek üzere olduğunuz komite kaldırıldı");
+                } else {
+                    t.showNotification("Oy kullanabildiğiniz komiteler güncellendi", "info");
                 }
             });
 
@@ -117,7 +118,8 @@ window.app = () => ({
 
                     if (index === -1) {
                         t.modalCommittee = null;
-                        // TODO: Notification
+
+                        t.showNotification("😵 Üzerinde çalıştığınız komite silindi!");
                     } else {
                         t.modalCommittee = t.committees[index];
                     }
@@ -133,7 +135,8 @@ window.app = () => ({
 
                     if (index === -1) {
                         t.modalUser = null;
-                        // TODO: Notification
+
+                        t.showNotification("😵 Üzerinde çalıştığınız kullanıcı silindi!");
                     } else {
                         t.modalUser.name = data[index].name;
                     }
@@ -172,7 +175,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        // TODO: pls refresh notification
+        this.showNotification("Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenileyin", "danger", 0, false);
     },
 
     sendMessage(type, data = {}) {
@@ -197,7 +200,13 @@ window.app = () => ({
         this.modal = {title, text, onAccept, acceptClass};
     },
 
-    showNotification(message, type, time = 3000, dismissible = true) {
+    showNotification(message, type = "danger", time = 3300, dismissible = true) {
+        if (this.notification.show) {
+            this.notification.show = false;
+
+            setTimeout(() => this.showNotification(message, type, time, dismissible), 300);
+        }
+
         this.notification = {show: true, message, type, dismissible};
 
         if (time > 0) {
