@@ -17,6 +17,21 @@
 
 <body>
 <div x-data="app()" x-init="init()" class="radial-background">
+    <div
+            x-show="notification.show"
+            x-transition:enter="notification-transition"
+            x-transition:enter-start="transform-translateY-0"
+            x-transition:enter-end="transform-translateY-100"
+            x-transition:leave="notification-transition"
+            x-transition:leave-start="transform-translateY-100"
+            x-transition:leave-end="transform-translateY-0"
+            class="notification"
+            :class="{'is-info': notification.type === 'info', 'is-danger': notification.type === 'danger'}"
+    >
+        <button x-show="notification.dismissible" class="delete" @click="notification.show = false"></button>
+        <div x-text="notification.message"></div>
+    </div>
+
     <section class="hero is-fullheight">
         <div class="hero-body">
             <div class="container">
@@ -27,11 +42,11 @@
             </div>
         </div>
 
-        <footer class="hero-foot">
+        <div class="hero-foot">
             <div class="content has-text-centered">
                 <p class="mb-3">© 2020 IEEE THKÜ Öğrenci Topluluğu · <a href="https://www.ieeethku.com/" target="_blank">ieeethku.com</a></p>
             </div>
-        </footer>
+        </div>
     </section>
 
     <template x-if="modal !== null">

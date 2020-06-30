@@ -7,6 +7,7 @@ import Tagsfield from "./tagsfield";
 window.app = () => ({
     loginError: 0,
     modal: null,
+    notification: {show: false},
 
     _page: null,
     _queue: {},
@@ -51,8 +52,8 @@ window.app = () => ({
                 delete this._queue[message.id];
             }
         });
-        this.ws.addEventListener("close", this.onDisconnect);
-        this.ws.addEventListener("error", this.onDisconnect);
+        this.ws.addEventListener("close", () => this.onDisconnect());
+        this.ws.addEventListener("error", () => this.onDisconnect());
     },
 
     get page() {
@@ -92,7 +93,7 @@ window.app = () => ({
             t.subTo("userVotes", data => {
                 const sortedData = [...data].sort((a, b) => a.order - b.order);
 
-                // TODO: Use onDisconnect library to notify user their stuff has been updated
+                // TODO: Update notification
 
                 t.userVotes = sortedData;
                 const index = t.getCurrentUserVoteIndex();
@@ -171,7 +172,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        // TODO: pls refresh error (ng-notifications-bar or notie)
+        // TODO: pls refresh notification
     },
 
     sendMessage(type, data = {}) {
@@ -194,6 +195,14 @@ window.app = () => ({
 
     showModal(title, text, onAccept = null, acceptClass = "is-danger") {
         this.modal = {title, text, onAccept, acceptClass};
+    },
+
+    showNotification(message, type, time = 3000, dismissible = true) {
+        this.notification = {show: true, message, type, dismissible};
+
+        if (time > 0) {
+            setTimeout(() => this.notification.show = false, time);
+        }
     },
 
     async login() {
