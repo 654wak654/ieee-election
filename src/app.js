@@ -363,9 +363,11 @@ window.app = () => ({
         const tags = this.$refs.candidates.querySelectorAll("span.tag");
 
         this.modalCommitteeCandidatesTemp = Array.from(tags, tag => {
+            const candidate = this.modalCommittee.candidates.find(c => c.name === tag.innerText);
+
             return {
                 name: tag.innerText,
-                votes: this.modalCommittee.candidates.find(c => c.name === tag.innerText).votes
+                votes: candidate ? candidate.votes : 0
             };
         });
     },
