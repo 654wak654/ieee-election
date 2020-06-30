@@ -117,10 +117,10 @@ window.app = () => ({
             t.subTo("committees", data => {
                 t.committees = [...data].sort((a, b) => a.order - b.order);
 
-                if (t.modalCommittee !== null) {
+                if (t.modalCommittee !== null && t.modalCommittee.id) {
                     const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
 
-                    if (index === -1 && t.modalCommittee.id) {
+                    if (index === -1) {
                         t.modalCommittee = null;
 
                         t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
@@ -134,10 +134,10 @@ window.app = () => ({
 
             // noinspection JSIgnoredPromiseFromCall
             t.subTo("users", data => {
-                if (t.modalUser !== null) {
+                if (t.modalUser !== null && t.modalUser.id) {
                     const index = data.findIndex(u => u.id === t.modalUser.id);
 
-                    if (index === -1 && t.modalUser.id) {
+                    if (index === -1) {
                         t.modalUser = null;
 
                         t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
