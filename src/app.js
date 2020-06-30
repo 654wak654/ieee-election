@@ -120,7 +120,7 @@ window.app = () => ({
                 if (t.modalCommittee !== null) {
                     const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
 
-                    if (index === -1) {
+                    if (index === -1 && t.modalCommittee) {
                         t.modalCommittee = null;
 
                         t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
@@ -137,7 +137,7 @@ window.app = () => ({
                 if (t.modalUser !== null) {
                     const index = data.findIndex(u => u.id === t.modalUser.id);
 
-                    if (index === -1) {
+                    if (index === -1 && t.modalUser) {
                         t.modalUser = null;
 
                         t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
