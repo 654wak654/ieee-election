@@ -1,141 +1,210 @@
 <template x-if="page === 'admin-panel'">
-    <div class="hero-body" x-transition:enter="page-transition" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-        <div class="column is-4 is-offset-4">
-            <h3 class="title has-text-centered has-text-grey-dark">Yönetici Paneli</h3>
-            <hr class="login-hr has-background-grey-dark">
-            <nav class="panel has-background-white">
-                <p class="panel-heading vertical-middle">
-                    <span class="icon"><i class="material-icons">ballot</i></span>
-                    <span>Seçim Listesi</span>
-                </p>
+    <div class="column" x-transition:enter="page-transition" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+        <h3 class="title has-text-centered has-text-grey-dark">Yönetici Paneli</h3>
+        <hr class="login-hr has-background-grey-dark">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <nav class="panel has-background-white">
+                    <p class="panel-heading vertical-middle">
+                        <span class="icon"><i class="material-icons">ballot</i></span>
+                        <span>Komite Listesi</span>
+                    </p>
 
-                <div x-show="elections.some(e => e.active)" class="panel-block has-background-info-dark">
-                    <label class="label pr-2 has-text-light">Aktif Seçim:</label>
-                    <input class="input is-static has-text-light" type="text" :value="elections.find(e => e.active)?.name" readonly>
-                </div>
-
-                <div x-show="elections.some(e => e.active)" class="panel-block has-background-info-dark">
-                    <label class="label pr-2 has-text-light">Yönetici:</label>
-                    <input class="input is-static has-text-light" type="text" :value="elections.find(e => e.active)?.moderator" readonly>
-                </div>
-
-                <template x-for="election in elections" :key="election">
-                    <div class="panel-block px-0">
-                        <a
-                                class="panel-block width-100 has-tooltip-arrow has-tooltip-left"
-                                data-tooltip="Seçimi Düzenle" x-text="election.name" @click="editElection(election)"
-                        ></a>
-                        <a class="button is-info has-tooltip-arrow" :data-tooltip="election.active ? 'Seçimi Durdur' : 'Seçimi Başlat'" @click="manageElection(election)">
-                            <span class="icon"><i class="material-icons" x-text="election.active ? 'pause_circle_outline' : 'play_circle_outline'"></i></span>
-                        </a>
-                        <a class="button is-danger has-tooltip-arrow" data-tooltip="Seçimi Sil" @click="deleteElection(election)">
-                            <span class="icon"><i class="material-icons">delete</i></span>
-                        </a>
+                    <div class="has-fixed-size-big">
+                        <template x-for="(committee, index) in committees" :key="committee">
+                            <div class="panel-block px-0">
+                                <a
+                                        class="panel-block width-100"
+                                        data-tippy-content="Seçimi Düzenle"
+                                        @click="editCommittee(committee)"
+                                >
+                                    <span x-text="committee.name"></span>
+                                </a>
+                                <a
+                                        class="button is-info"
+                                        data-tippy-content="Yukarı Sıraya Taşı"
+                                        @click="moveCommitteeUp(committee)"
+                                        :disabled="index === 0"
+                                >
+                                    <span class="icon"><i class="material-icons">arrow_circle_up</i></span>
+                                </a>
+                                <a
+                                        class="button is-info"
+                                        data-tippy-content="Aşağı Sıraya Taşı"
+                                        @click="moveCommitteeDown(committee)"
+                                        :disabled="index === committees.length - 1"
+                                >
+                                    <span class="icon"><i class="material-icons">arrow_circle_down</i></span>
+                                </a>
+                                <a
+                                        class="button is-link"
+                                        :data-tippy-content="committee.visible ? 'Seçimi Gizle' : 'Seçimi Göster'"
+                                        @click="toggleCommitteeVisible(committee)"
+                                >
+                                    <span class="icon"><i class="material-icons" x-text="committee.visible ? 'visibility' : 'visibility_off'"></i></span>
+                                </a>
+                                <a class="button is-danger" data-tippy-content="Seçimi Sil" @click="deleteCommittee(committee)">
+                                    <span class="icon"><i class="material-icons">delete</i></span>
+                                </a>
+                            </div>
+                        </template>
                     </div>
-                </template>
 
-                <div class="panel-block has-content-justified-center mt-2">
-                    <button class="button is-primary is-medium is-fullwidth-mobile"
-                            @click="editElection({name: '', status: 0, active: false, categories: [], keys: []})">
-                        <span class="icon"><i class="material-icons">add_circle_outline</i></span>
-                        <span>Yeni Seçim Oluştur</span>
-                    </button>
-                </div>
-            </nav>
+                    <div class="panel-block panel-block-footer has-content-justified-center-tablet mt-2">
+                        <button class="button is-primary is-medium is-fullwidth-mobile"
+                                @click="editCommittee({name: '', visible: false, candidates: []})">
+                            <span class="icon"><i class="material-icons">add_circle_outline</i></span>
+                            <span>Yeni Komite Oluştur</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
 
-            <!-- TODO: This isn't just a back button it'll be a logout button -->
-            <p @click="page = 'admin-login'" class="is-pulled-right has-text-link mt-2 is-clickable">Çıkış Yap</p>
+            <div class="column is-4">
+                <nav class="panel has-background-white mb-2">
+                    <p class="panel-heading vertical-middle">
+                        <span class="icon"><i class="material-icons">group</i></span>
+                        <span>Kullanıcı Listesi</span>
+                    </p>
+
+                    <div class="has-fixed-size-big">
+                        <template x-for="user in users" :key="user">
+                            <div class="panel-block px-0">
+                                <a
+                                        class="panel-block width-100"
+                                        data-tippy-content="Kullanıcıyı Düzenle"
+                                        x-text="user.name"
+                                        @click="editUser(user)"
+                                >
+                                </a>
+                                <a
+                                        class="button is-link"
+                                        data-tippy-content="Anahtarı Kopyala"
+                                        data-tippy-hideOnClick="false"
+                                        @click="copyKeyToClipboard(user)"
+                                >
+                                    <span class="icon"><i class="material-icons">content_copy</i></span>
+                                </a>
+                                <span :data-tippy-content="votedAny(user) ? 'Kullanıcı Oy Kullanmış!': 'Kullanıcıyı Sil'">
+                                    <a class="button is-danger" @click="deleteUser(user)" :disabled="votedAny(user)">
+                                        <span class="icon"><i class="material-icons">delete</i></span>
+                                    </a>
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="panel-block panel-block-footer has-content-justified-center-tablet mt-2">
+                        <button
+                                class="button is-primary is-medium is-fullwidth-mobile"
+                                @click="editUser({name: '', key: ''})"
+                        >
+                            <span class="icon"><i class="material-icons">person_add</i></span>
+                            <span>Yeni Kullanıcı Oluştur</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <p @click="signOutTo('admin-login')" class="is-pulled-right has-text-link is-clickable">Çıkış Yap</p>
+            </div>
         </div>
     </div>
 </template>
 
-<template x-if="modalElection !== null">
-    <div class="modal is-active" @keyup.escape.window="modalElection = null">
+<template x-if="modalCommittee !== null">
+    <div class="modal is-active" @keyup.escape.window="modalCommittee = null">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
-                <p class="modal-card-title" x-text="modalElection.id ? 'Seçimi Düzenle' : 'Yeni Seçim Oluştur'"></p>
-                <button class="delete" aria-label="close" @click="modalElection = null"></button>
+                <p class="modal-card-title vertical-middle">
+                    <span class="icon"><i class="material-icons is-size-3">ballot</i></span>
+                    <span x-text="modalCommittee.id ? 'Komite Düzenle' : 'Yeni Komite Oluştur'"></span>
+                </p>
+                <button class="delete" aria-label="close" @click="modalCommittee = null"></button>
             </header>
 
             <section class="modal-card-body">
                 <div class="field">
-                    <label class="label">Seçim İsmi</label>
+                    <label for="committee-name" class="label">Komite İsmi</label>
                     <div class="control">
-                        <input class="input" type="text" x-model="modalElection.name">
+                        <input id="committee-name" class="input" type="text" x-model="modalCommittee.name">
                     </div>
                 </div>
 
-                <!-- TODO: Number field and generate button -->
-                <div class="field">
-                    <label class="label">Seçim Anahtarları Sayısı</label>
+                <label class="label">Adaylar</label>
+                <div x-ref="candidates" class="tagsfield field input is-grouped is-grouped-multiline">
                     <div class="control">
-                        <input class="input" type="text" x-model="modalElection.name">
+                        <input
+                                type="hidden"
+                                :value="modalCommittee.candidates.map(c => c.name).join(',')"
+                                @change="updateCandidates()"
+                        >
+                        <span class="input" contenteditable></span>
                     </div>
                 </div>
+                <p x-show="candidateDeleteError" class="help is-danger">Oy almış adayları silemezsiniz!</p>
 
-                <!-- TODO: This needs to be a text area with 3 line height -->
-                <div class="field">
-                    <label class="label">Seçim Anahtarları</label>
-                    <div class="control">
-                        <input class="input" type="text" x-model="modalElection.name">
-                    </div>
-                </div>
-
-                <div class="container">
-                    <label class="label">Kategoriler</label>
-                    <button class="button is-primary is-fullwidth-mobile mb-4" @click="createCategory()">
-                        <span class="icon"><i class="material-icons">add_circle_outline</i></span>
-                        <span>Yeni Kategori Oluştur</span>
-                    </button>
-
-                    <template x-for="(category, index) in modalElection.categories" :key="category">
-                        <div class="card" :class="{'mb-4': index < modalElection.categories.length - 1}">
-                            <div class="card-content">
-                                <div class="field">
-                                    <label class="label">Kategori İsmi</label>
-                                    <div class="control">
-                                        <input class="input" type="text" x-model="category.name" :autofocus="index === modalElection.categories.length - 1">
-                                    </div>
-                                </div>
-
-                                <label class="label">Adaylar</label>
-                                <div class="tagsfield field input is-grouped is-grouped-multiline">
-                                    <div class="control">
-                                        <input type="hidden" :value="category.candidates.map(c => c.name).join(',')">
-                                        <span contenteditable></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <footer class="card-footer">
-                                <p
-                                        class="card-footer-item is-clickable has-text-weight-bold"
-                                        @click="moveCategory(index, index - 1)"
-                                >
-                                    <span class="icon mr-1"><i class="material-icons">arrow_circle_up</i></span>
-                                    <span>Yukarı</span>
-                                </p>
-                                <p
-                                        class="card-footer-item is-clickable has-text-weight-bold"
-                                        @click="moveCategory(index, index + 1)"
-                                >
-                                    <span class="icon mr-1"><i class="material-icons">arrow_circle_down</i></span>
-                                    <span>Aşağı</span>
-                                </p>
-                                <p
-                                        class="card-footer-item is-clickable has-text-weight-bold has-text-white-bis has-background-danger"
-                                        @click="removeCategory(index)"
-                                >
-                                    <span class="icon"><i class="material-icons">delete</i></span>
-                                    <span>Sil</span>
-                                </p>
-                            </footer>
-                        </div>
+                <table class="table is-fullwidth is-hoverable">
+                    <thead>
+                    <tr>
+                        <th>Aday</th>
+                        <th>Oy Payı</th>
+                        <th><abbr title="Bütün oylar içindeki yüzdesi">%</abbr></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="candidate in modalCommitteeCandidatesTemp" :key="candidate">
+                        <tr>
+                            <td x-text="candidate.name"></td>
+                            <td x-text="candidateVotes(candidate)"></td>
+                            <td x-text="candidatePercent(candidate)"></td>
+                        </tr>
                     </template>
+                    <tr>
+                        <th>Kullanılmamış Oy</th>
+                        <td x-text="unusedVotes()"></td>
+                        <td x-text="unusedPercent()"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="field">
+                    <label for="search" class="label">Kullanıcı Listesi</label>
+                    <div class="control has-icons-left has-icons-right">
+                        <input id="search" type="text" class="input" x-model="userSearch" autocomplete="off">
+                        <span class="icon is-left has-text-dark"><i class="material-icons">search</i></span>
+                        <span x-show="userSearch.length > 0" class="icon is-right" @click="userSearch = ''">
+                            <a class="delete"></a>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="has-fixed-size-small">
+                    <nav class="panel">
+                        <template x-for="user in users" :key="user">
+                            <div x-show="user.name.toLowerCase().includes(userSearch.toLowerCase())" class="panel-block px-0">
+                                <a class="panel-block width-100" x-text="user.name"></a>
+                                <span :data-tippy-content="['Oylamaya Ekle', 'Oylamadan Çıkar', 'Oy Kullanılmış!', 'Önce Komiteyi Kaydetmelisiniz!'][voteStatus(user)]">
+                                    <a
+                                            :disabled="voteStatus(user) > 1"
+                                            @click="toggleVote(user)"
+                                            class="button"
+                                            :class="{
+                                                'is-danger': voteStatus(user) === 0,
+                                                'is-success': voteStatus(user) === 1,
+                                                'is-info': voteStatus(user) > 1
+                                            }"
+                                    >
+                                        <span class="icon"><i class="material-icons">how_to_vote</i></span>
+                                    </a>
+                                </span>
+                            </div>
+                        </template>
+                    </nav>
                 </div>
             </section>
-            <footer class="modal-card-foot has-content-justified-center">
-                <button class="button is-success is-medium is-fullwidth-mobile" :class="{'is-loading': savingElection}" @click="saveElection()">
+            <footer class="modal-card-foot has-content-justified-center-tablet">
+                <button class="button is-primary is-medium is-fullwidth-mobile" :class="{'is-loading': modalIsLoading}" @click="saveCommittee()">
                     <span class="icon"><i class="material-icons">save</i></span>
                     <span>Kaydet</span>
                 </button>
@@ -144,18 +213,76 @@
     </div>
 </template>
 
-<template x-if="modal !== null">
-    <div class="modal is-active" @keyup.escape.window="modal = null">
+<template x-if="modalUser !== null">
+    <div class="modal is-active" @keyup.escape.window="modalUser = null">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
-                <p class="modal-card-title" x-text="modal.title"></p>
-                <button class="delete" aria-label="close" @click="modal = null"></button>
+                <p class="modal-card-title vertical-middle">
+                    <span class="icon"><i class="material-icons is-size-3">person</i></span>
+                    <span x-text="modalUser.id ? 'Kullanıcıyı Düzenle' : 'Yeni Kullanıcı Oluştur'"></span>
+                </p>
+                <button class="delete" aria-label="close" @click="modalUser = null"></button>
             </header>
-            <section class="modal-card-body" x-text="modal.text"></section>
-            <footer class="modal-card-foot has-content-justified-right">
-                <button class="button is-medium" @click="modal = null">İptal</button>
-                <button x-show="modal.onAccept !== null" class="button is-medium is-danger" @click="modal.onAccept(); modal = null">Evet</button>
+
+            <section class="modal-card-body">
+                <div class="field">
+                    <label for="user-name" class="label">Kullanıcı İsmi</label>
+                    <div class="control">
+                        <input id="user-name" class="input" type="text" x-model="modalUser.name">
+                    </div>
+                    <p class="help">Not: Kullanıcı ismi sadece arayüzde kolaylık sağlamak için. Kullanıcılara anahtar vermek yeterli!</p>
+                </div>
+
+                <label for="user-key" class="label">Kullanıcı Anahtarı</label>
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input
+                                id="user-key"
+                                type="text"
+                                class="input is-family-monospace"
+                                placeholder="Anahtar oluşturuluyor..."
+                                x-model="modalUser.key"
+                                @click.self="$event.target.setSelectionRange(0, modalUser.key.length)"
+                                readonly
+                        >
+                    </div>
+                    <div class="control">
+                        <a
+                                class="button is-link"
+                                data-tippy-content="Anahtarı Kopyala"
+                                data-tippy-hideOnClick="false"
+                                @click="copyKeyToClipboard(modalUser)"
+                        >
+                            <span class="icon"><i class="material-icons">content_copy</i></span>
+                        </a>
+                    </div>
+                </div>
+
+                <label class="label">Oy Kullanabildiği Komiteler</label>
+                <p class="help">Oy kullanabildiği komiteleri değiştirmek için komite listesine gidin.</p>
+                <table class="table is-fullwidth is-hoverable">
+                    <thead>
+                    <tr>
+                        <th>Komite</th>
+                        <th>Oy Kullanmış?</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="committee in votableCommittees()" :key="committee">
+                        <tr>
+                            <td x-text="committee.name"></td>
+                            <td x-text="voteStatus(modalUser, committee.id) > 1 ? 'Evet' : 'Hayır'"></td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </section>
+            <footer class="modal-card-foot has-content-justified-center-tablet">
+                <button class="button is-primary is-medium is-fullwidth-mobile" :class="{'is-loading': modalIsLoading}" @click="saveUser()">
+                    <span class="icon"><i class="material-icons">save</i></span>
+                    <span>Kaydet</span>
+                </button>
             </footer>
         </div>
     </div>

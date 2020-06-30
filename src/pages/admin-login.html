@@ -1,52 +1,65 @@
 <template x-if="page === 'admin-login'">
-    <div class="hero-body" x-transition:enter="page-transition" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-        <div class="column is-4 is-offset-4">
-            <h3 class="title has-text-centered has-text-grey-dark">Yönetici Girişi</h3>
-            <hr class="login-hr has-background-grey-dark">
-            <div class="box is-marginless">
+    <div class="column is-4 is-offset-4" x-transition:enter="page-transition" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+        <h3 class="title has-text-centered has-text-grey-dark">Yönetici Girişi</h3>
+        <hr class="login-hr has-background-grey-dark">
+        <div class="box is-marginless">
 
-                <!-- TODO: The "remember password" stuff here don't work -->
+            <!-- TODO: The "remember password" stuff here don't work -->
 
-                <form autocomplete="on" @submit="$event.preventDefault()">
-                    <div class="field">
-                        <label for="username" class="label is-medium has-text-black">Kullanıcı Adı:</label>
-                        <div class="control is-medium has-icons-left">
-                            <input
-                                    id="username" x-ref="username" type="text" name="username"
-                                    @input="loginError = false" autocomplete="username"
-                                    class="input is-medium" :class="{'is-danger': loginError, 'is-black': !loginError}"
-                            >
-                            <span class="icon is-left has-text-black"><i class="material-icons">person</i></span>
-                        </div>
+            <form autocomplete="on" @submit="$event.preventDefault()">
+                <div class="field">
+                    <label for="username" class="label is-medium">Kullanıcı Adı:</label>
+                    <div class="control has-icons-left">
+                        <input
+                                id="username"
+                                x-ref="username"
+                                type="text"
+                                name="username"
+                                @input="loginError = 0"
+                                autocomplete="username"
+                                class="input is-medium"
+                                :class="{'is-danger': loginError === 2, 'is-dark': loginError === 0}"
+                        >
+                        <span class="icon is-left has-text-dark"><i class="material-icons">person</i></span>
                     </div>
+                </div>
 
-                    <div class="field">
-                        <label for="password" class="label is-medium has-text-black">Parola:</label>
-                        <div class="control is-medium has-icons-left">
-                            <input
-                                    id="password" x-ref="password" type="password" name="password"
-                                    @input="loginError = false" autocomplete="current-password"
-                                    class="input is-medium" :class="{'is-danger': loginError, 'is-black': !loginError}"
-                            >
-                            <span class="icon is-left has-text-black"><i class="material-icons">lock</i></span>
-                        </div>
+                <div class="field">
+                    <label for="password" class="label is-medium">Parola:</label>
+                    <div class="control has-icons-left">
+                        <input
+                                id="password"
+                                x-ref="password"
+                                type="password"
+                                name="password"
+                                @input="loginError = 0"
+                                autocomplete="current-password"
+                                class="input is-medium"
+                                :class="{'is-danger': loginError === 2, 'is-dark': loginError === 0}"
+                        >
+                        <span class="icon is-left has-text-dark"><i class="material-icons">lock</i></span>
                     </div>
+                </div>
 
-                    <div x-show="loginError" class="field">
-                        <p class="control has-icons-left">
-                            <input class="input is-static has-text-danger" type="text" value="Geçersiz kullanıcı adı veya parola girildi!" readonly>
-                            <span class="icon is-left has-text-danger"><i class="material-icons">warning</i></span>
-                        </p>
-                    </div>
+                <div x-show="loginError === 2" class="field">
+                    <p class="control has-icons-left">
+                        <input class="input is-static has-text-danger" type="text" value="Geçersiz kullanıcı adı veya parola girildi!" readonly>
+                        <span class="icon is-left has-text-danger"><i class="material-icons">warning</i></span>
+                    </p>
+                </div>
 
-                    <button type="submit" @click="adminLogin()" class="button is-primary is-medium is-fullwidth">
-                        <span>Giriş Yap</span>
-                        <span class="icon"><i class="material-icons">login</i></span>
-                    </button>
-                </form>
-            </div>
-
-            <p @click="page = 'login'" class="is-pulled-right has-text-link mt-2 is-clickable">Geri Git</p>
+                <button
+                        type="submit"
+                        @click="adminLogin()"
+                        class="button is-primary is-medium is-fullwidth"
+                        :class="{'is-loading': loginError === 1}"
+                >
+                    <span class="icon"><i class="material-icons">login</i></span>
+                    <span>Giriş Yap</span>
+                </button>
+            </form>
         </div>
+
+        <p @click="page = 'login'" class="is-pulled-right has-text-link mt-2 is-clickable">Geri Git</p>
     </div>
 </template>

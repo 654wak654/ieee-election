@@ -1,69 +1,31 @@
 /* eslint-env node */
 
-const lodashId = require("lodash-id");
 const FileAsync = require("lowdb/adapters/FileAsync");
 const low = require("lowdb");
 const shortid = require("shortid");
 
 const adapter = new FileAsync("db.json", {
     defaultValue: {
-        // TODO: The system would start with no election at all, this is just to define the structure
-        elections: [
-            {
-                id: "0",
-                name: "General election",
-                // TODO: Keep status?
-                status: 0, // 0: created, 1: inprogress, 2: finished
-                active: true,
-                categories: [
-                    {
-                        name: "Alpha Committee",
-                        candidates: [
-                            {
-                                id: 0, // TODO: Use shortid for this
-                                name: "Candidate Abcc",
-                                votes: 0 // TODO: Move this to a separate array called results
-                            },
-                            {
-                                id: 1, // TODO: Use shortid for this
-                                name: "Candidate Xyzz",
-                                votes: 0 // TODO: Move this to a separate array called results
-                            }
-                        ]
-                    },
-                    {
-                        name: "Bravo Committee",
-                        candidates: []
-                    }
-                ],
-                keys: [] // TODO: ?
-            },
-            {
-                id: "1",
-                name: "Waaat",
-                status: 0, // 0: created, 1: inprogress, 2: finished
-                active: false,
-                categories: [],
-                keys: [] // TODO: ?
-            }
-        ],
+        committees: [],
+        users: [],
+        votes: [],
+        logs: [],
         admins: [
             {
                 username: "ozan.egitmen",
                 password: "cd73e66742b83f629e0f700b6bc3e0b4bd1f6db776b2abc93c18b0f5d055d6b8"
             }
-        ],
-        logs: [
-            {
-                timestamp: "",
-                message: ""
-            }
         ]
     }
 });
 
-// Make lodash-id use shortid
-lodashId.createId = shortid.generate;
+/*
+committees[order, name, visible, candidates[name, votes]]
+users[name, key]
+votes[userId, committeeId, isCast]
+logs[timestamp, message]
+admins[username, password]
+*/
 
 console.info("DB is initializing");
 let db = null;
@@ -71,29 +33,89 @@ let db = null;
 low(adapter).then(_db => {
     console.info("DB has been initialized");
     db = _db;
-    db._.mixin(lodashId); // Look at that cute face
 });
 
 module.exports = {
-    activeElectionHasKey(key) {
-        return db.get("elections").find({active: true}).get("keys").includes(key).value();
+    getUser(key) {
+        return db.get("users").find({key}).value();
     },
 
     hasAdmin(username, password) {
-        return db.get("admins").some({"username": username, "password": password}).value();
+        return db.get("admins").some({username, password}).value();
     },
 
-    getElections() {
-        return db.get("elections").value();
+    getUserVotes(userId) {
+        const votes = db.get("votes").filter({userId}).value();
+
+        return db.get("committees").filter(committee => {
+            return committee.visible && votes.map(v => v.committeeId).includes(committee.id);
+        }).map(committee => {
+            const response = (({id, name, order}) => ({id, name, order}))(committee);
+
+            if (votes.find(v => v.committeeId === committee.id).isCast) {
+                response.isCast = true;
+            } else {
+                response.candidateNames = committee.candidates.map(candidate => candidate.name);
+            }
+
+            return response;
+        }).value();
     },
 
-    async upsertElection(election) {
-        const {id} = await db.get("elections").upsert(election).write();
-
-        return id;
+    getCommittees() {
+        return db.get("committees").value();
     },
 
-    async deleteElection(id) {
-        await db.get("elections").removeById(id).write();
+    upsertCommittee(committee) {
+        if (committee.id) {
+            return db.get("committees").find({id: committee.id}).assign(committee).write();
+        } else {
+            return db.get("committees").push({id: shortid.generate(), ...committee}).write();
+        }
+    },
+
+    async deleteCommittee(id) {
+        await db.get("votes").remove({committeeId: id}).write();
+        await db.get("committees").remove({id}).write();
+    },
+
+    getUsers() {
+        return db.get("users").value();
+    },
+
+    upsertUser(user) {
+        if (user.id) {
+            return db.get("users").find({id: user.id}).assign(user).write();
+        } else {
+            return db.get("users").push({id: shortid.generate(), ...user}).write();
+        }
+    },
+
+    async deleteUser(id) {
+        await db.get("votes").remove({userId: id}).write();
+        await db.get("users").remove({id}).write();
+    },
+
+    getVotes() {
+        return db.get("votes").value();
+    },
+
+    addVote(vote) {
+        return db.get("votes").push(vote).write();
+    },
+
+    removeVote(vote) {
+        return db.get("votes").remove(vote).write();
+    },
+
+    async castVote(committeeId, candidateName, userId) {
+        if (db.get("votes").some({committeeId, userId, isCast: false}).value()) {
+            await db.get("votes").find({committeeId, userId}).assign({isCast: true}).write();
+            await db.get("committees").find({id: committeeId}).get("candidates").find({name: candidateName}).update("votes", v => v + 1).write();
+
+            return true;
+        }
+
+        return false;
     }
 };

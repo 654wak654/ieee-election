@@ -13,7 +13,7 @@
         [
             "minify",
             {
-                // "removeConsole": true,
+                "removeConsole": true,
                 "removeDebugger": true
             }
         ]

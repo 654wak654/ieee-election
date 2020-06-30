@@ -1,15 +1,20 @@
 @import "../node_modules/bulmaswatch/yeti/variables"
+
+// Make help size slightly bigger (default: 0.75rem)
+$help-size: 0.85rem
+
 @import "../node_modules/bulma"
 @import "../node_modules/bulmaswatch/yeti/overrides"
 
-@import "../node_modules/@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css"
+@import "../node_modules/tippy.js/dist/tippy.css"
+@import "../node_modules/tippy.js/animations/perspective.css"
 
 // Fix side scrollbar appearing for no reason
 html
   overflow-y: auto
 
 // General page background
-body > div
+.radial-background
   background-image: radial-gradient(circle farthest-corner at 1.3% 2.8%, rgba(239, 249, 249, 1) 0%, rgba(182, 199, 226, 1) 100.2%)
 
 // Helps <p> feel like <a>
@@ -52,10 +57,20 @@ body > div
 .modal-card-body
   max-height: 70vh
 
+.has-fixed-size-big
+  height: 45vh
+  overflow-y: auto
+  overflow-x: hidden
+
+.has-fixed-size-small
+  height: 20vh
+  overflow-y: auto
+  overflow-x: hidden
+
 .container > .card > .card-footer > .card-footer-item:not(:last-child)
   border-right: 1px solid lightgray
 
-div.panel-block:not(:last-child)
+div.panel-block:not(.panel-block-footer)
   border-bottom: none
   padding-top: 0
   padding-bottom: 0
@@ -65,7 +80,7 @@ div.panel-block:not(:last-child)
     margin: 0
 
 @media screen and (min-width: 769px), print
-  .has-content-justified-center
+  .has-content-justified-center-tablet
     justify-content: center
 
 @media screen and (max-width: 768px), print
@@ -113,6 +128,10 @@ $tagsfield-spacing-vertical: calc((0.5em - #{$control-border-width}) / 2)
     span[contenteditable]
       display: block
       width: 100%
+      line-height: 1.25
+      height: 1.25em
+      padding: 0
+      border: 0
 
   // Only child
   > div:first-child:nth-last-child(1) span[contenteditable]

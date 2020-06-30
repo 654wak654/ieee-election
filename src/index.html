@@ -16,12 +16,16 @@
 </head>
 
 <body>
-<div x-data="app()" x-init="init()">
+<div x-data="app()" x-init="init()" class="radial-background">
     <section class="hero is-fullheight">
-        <include src="pages/login.html"></include>
-        <include src="pages/home.html"></include>
-        <include src="pages/admin-login.html"></include>
-        <include src="pages/admin-panel.html"></include>
+        <div class="hero-body">
+            <div class="container">
+                <include src="pages/login.html"></include>
+                <include src="pages/home.html"></include>
+                <include src="pages/admin-login.html"></include>
+                <include src="pages/admin-panel.html"></include>
+            </div>
+        </div>
 
         <footer class="hero-foot">
             <div class="content has-text-centered">
@@ -29,6 +33,23 @@
             </div>
         </footer>
     </section>
+
+    <template x-if="modal !== null">
+        <div class="modal is-active" @keyup.escape.window="modal = null">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title" x-text="modal.title"></p>
+                    <button class="delete" aria-label="close" @click="modal = null"></button>
+                </header>
+                <section class="modal-card-body" x-text="modal.text"></section>
+                <footer class="modal-card-foot has-content-justified-right">
+                    <button class="button" @click="modal = null">İptal</button>
+                    <button x-show="modal.onAccept !== null" class="button" :class="{[modal.acceptClass]: true}" @click="modal.onAccept(); modal = null">Evet</button>
+                </footer>
+            </div>
+        </div>
+    </template>
 </div>
 
 <script src="app.js"></script>

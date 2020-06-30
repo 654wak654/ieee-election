@@ -1,9 +1,11 @@
 class Tagsfield {
-    constructor(el) {
+    constructor(el, alpineApp) {
         if (el.classList.contains("ready")) {
             return;
         }
         el.classList.add("ready");
+
+        this.alpineApp = alpineApp;
 
         this.el = el;
         this.input = el.querySelector("input[type=\"hidden\"]");
@@ -26,9 +28,11 @@ class Tagsfield {
     }
 
     validateTag(value, tagsValues) {
-        if (value.length > 2 &&
-            value.length <= 40 &&
-            tagsValues.indexOf(value) === -1) {
+        if (
+            value.length > 0 &&
+            value.length <= 50 &&
+            tagsValues.indexOf(value) === -1
+        ) {
             return true;
         }
     }
@@ -39,18 +43,40 @@ class Tagsfield {
         values.splice(index, 1);
         this.input.value = values.join(",");
         this.el.removeChild(tag);
+        this.input.dispatchEvent(new Event("change"));
+    }
+
+    canRemoveTag(tag) {
+        const tagCandidate = tag.querySelector("span.tag").innerText;
+
+        for (const candidate of this.alpineApp.modalCommitteeCandidatesTemp) {
+            if (candidate.name === tagCandidate && candidate.votes > 0) {
+                this.alpineApp.candidateDeleteError = true;
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     addTag(value) {
         const tag = document.createElement("div");
         tag.className = "control";
-        tag.innerHTML = `<div class="tags has-addons"><span class="tag is-success">${value}</span><a class="tag is-delete"></a></div>`;
-        tag.querySelector(".is-delete").addEventListener("click", this.removeTag.bind(this, tag));
+        tag.innerHTML = `<div class="tags has-addons"><span class="tag is-link">${value}</span><a class="tag is-delete"></a></div>`;
+        tag.querySelector(".is-delete").addEventListener("click", () => {
+            if (this.canRemoveTag(tag)) {
+                this.removeTag(tag);
+            }
+        });
         const inputs = this.el.children[this.el.children.length - 1];
         this.el.insertBefore(tag, inputs);
+        this.input.dispatchEvent(new Event("change"));
     }
 
     onKeyDown(event) {
+        this.alpineApp.candidateDeleteError = false;
+
         if (["Enter", ","].indexOf(event.key) >= 0) {
             event.preventDefault();
             const value = this.editable.textContent.trim();
@@ -69,7 +95,10 @@ class Tagsfield {
             this.el.children.length > 1) {
             const index = this.el.children.length - 2;
             const tag = this.el.children[index];
-            this.removeTag(tag);
+
+            if (this.canRemoveTag(tag)) {
+                this.removeTag(tag);
+            }
         }
     }
 }

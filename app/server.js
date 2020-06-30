@@ -12,15 +12,13 @@ wss.on("connection", ws => {
     const endpoint = new Endpoint(ws);
 
     ws.on("message", async wsData => {
-        let message;
+        let message = null;
         try {
             message = JSON.parse(wsData);
         } catch {
             ws.close(1003, "Invalid message");
             return;
         }
-
-        console.log("message =", message);
 
         if (!message.type) {
             ws.close(1003, "Missing message type");
@@ -32,8 +30,8 @@ wss.on("connection", ws => {
             return;
         }
 
-        if (!endpoint[message.type] || message.type === "constructor") {
-            ws.close(1003, "Invalid message type");
+        if (!endpoint[message.type] || message.type === "constructor" || message.type.startsWith("_")) {
+            ws.close(1003, `Invalid message type: ${message.type}`);
             return;
         }
 
@@ -57,7 +55,7 @@ wss.on("connection", ws => {
             return;
         }
 
-        if (message.type !== "auth" && message.type !== "adminAuth") {
+        if (!["auth", "adminAuth", "signOut"].includes(message.type)) {
             if (!message.token) {
                 ws.close(1003, "Missing message token");
                 return;
@@ -68,15 +66,13 @@ wss.on("connection", ws => {
                 return;
             }
 
-            if (!endpoint.verify(message.token, message.type)) {
+            if (!endpoint._verify(message.token, message.type)) {
                 ws.close(1003, "Invalid message token");
                 return;
             }
         }
 
-        const response = await endpoint[message.type](message.data);
-
-        console.log("response =", response);
+        const response = await endpoint[message.type](message.data, message.token);
 
         if (response) {
             ws.send(JSON.stringify({id: message.id, data: response}));

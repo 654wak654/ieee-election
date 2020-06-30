@@ -1,9 +1,86 @@
 <template x-if="page === 'home'">
-    <div class="hero-body" x-transition:enter="page-transition" x-transition:enter-start="opacity-0"  x-transition:enter-end="opacity-100">
-        <div class="column is-4 is-offset-4">
+    <div class="column is-6 is-offset-3" x-transition:enter="page-transition" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+        <h3 class="title has-text-centered has-text-grey-dark">Sandık</h3>
+        <hr class="login-hr has-background-grey-dark">
 
-            <!-- TODO: This isn't just a back button it'll be a logout button -->
-            <p @click="page = 'login'" class="has-text-link is-clickable">Back</p>
-        </div>
+        <template x-if="userVotes.length === 0">
+            <div class="box is-marginless">
+                TODO: Şuanda oy verebileceğiniz bir komite bulunmuyor
+                Cute lil image of empty box? cat looking at empty box etc etc
+            </div>
+        </template>
+
+        <template x-if="userVotes.length > 0">
+            <div class="box is-marginless">
+                <div class="field has-addons">
+                    <a
+                            class="button is-medium is-link is-outlined is-hidden-mobile"
+                            data-tippy-content="Önceki Komite"
+                            :disabled="currentUserVote === userVotes[0].id"
+                            @click="previousUserVote()"
+                    >
+                        <span class="icon"><i class="material-icons is-size-3">navigate_before</i></span>
+                    </a>
+
+                    <div class="control is-expanded mx-1">
+                        <div class="select is-fullwidth is-primary is-size-6-mobile is-size-5-tablet">
+                            <select x-model="currentUserVote">
+                                <template x-for="userVote in userVotes" :key="userVote">
+                                    <option
+                                            :value="userVote.id"
+                                            :selected="userVote.id === currentUserVote"
+                                            x-text="userVote.name"
+                                    ></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <a
+                            class="button is-medium is-link is-outlined is-hidden-mobile"
+                            data-tippy-content="Sonraki Komite"
+                            :disabled="currentUserVote === userVotes[userVotes.length - 1].id"
+                            @click="nextUserVote()"
+                    >
+                        <span class="icon"><i class="material-icons is-size-3">navigate_next</i></span>
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-content px-3">
+                        <template x-if="userVotes.find(v => v.id === currentUserVote).isCast">
+                            <p>TODO: ${Bu komite} için oyunuzu kullandınız. Cute lil image of voter</p>
+                        </template>
+
+                        <template x-if="userVotes.find(v => v.id === currentUserVote).candidateNames">
+                            <div class="buttons">
+                                <template x-for="candidateName in userVotes.find(v => v.id === currentUserVote).candidateNames">
+                                    <!-- TODO: Styling of these buttons -->
+                                    <button
+                                            class="button is-fullwidth is-size-6-mobile is-size-5-tablet"
+                                            :class="{'is-primary': candidateName === selectedCandidateName}"
+                                            x-text="candidateName"
+                                            @click="selectedCandidateName = candidateName"
+                                    ></button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="is-flex has-content-justified-center-tablet">
+                    <button
+                            class="button is-primary is-medium is-fullwidth-mobile mt-4"
+                            :disabled="selectedCandidateName.length === 0"
+                            @click="showVoteModal()"
+                    >
+                        <span class="icon"><i class="material-icons">how_to_vote</i></span>
+                        <span>Kesinleştir</span>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <p @click="signOutTo('login')" class="is-pulled-right has-text-link is-clickable mt-2">Çıkış Yap</p>
     </div>
 </template>

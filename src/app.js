@@ -1,48 +1,58 @@
 import "alpinejs";
+import tippy from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
-    loginError: false,
+    loginError: 0,
+    modal: null,
 
     _page: null,
     _queue: {},
     _queueId: 1,
+    _subs: {},
+
+    // Ballot box variables
+    userVotes: [],
+    currentUserVote: null,
+    selectedCandidateName: "",
 
     // Admin panel variables
-    modalElection: null,
-    modal: null,
-    savingElection: false,
-    elections: [],
+    modalCommittee: null,
+    modalCommitteeCandidatesTemp: [],
+    modalUser: null,
+    committees: [],
+    users: [],
+    votes: [],
+
+    candidateDeleteError: false,
+    modalIsLoading: false,
+    userSearch: "",
 
     init() {
-        this.ws = new WebSocket("ws://127.0.0.1:5050");
+        this.$watch("page", page => this.pageInits[page](this));
+        window.addEventListener("popstate", e => this.page = e.state);
+
+        this.ws = new WebSocket(`ws://${location.hostname}:5050`);
 
         this.ws.addEventListener("open", () => {
-            // TODO: Don't show page until this event
-
-            this.$watch("page", page => this.pageInits[page](this));
-            window.addEventListener("popstate", e => this.page = e.state);
-
             // Some initial route handing
-            this.page = window.location.pathname.slice(1);
+            this.page = location.pathname.slice(1);
         });
         this.ws.addEventListener("message", event => {
             const message = JSON.parse(event.data);
 
-            // TODO: We're going to have non-queued messages too
+            if (message.topic && this._subs[message.topic]) {
+                this._subs[message.topic](message.data);
+            } else {
+                this._queue[message.id](message.data);
 
-            this._queue[message.id](message.data);
-
-            delete this._queue[message.id];
+                delete this._queue[message.id];
+            }
         });
-        this.ws.addEventListener("close", event => {
-            console.error(event);
-        });
-        this.ws.addEventListener("error", event => {
-            console.error(event);
-        });
+        this.ws.addEventListener("close", this.onDisconnect);
+        this.ws.addEventListener("error", this.onDisconnect);
     },
 
     get page() {
@@ -50,8 +60,7 @@ window.app = () => ({
     },
 
     set page(page) {
-        // TODO: Handle security here
-        if (!this.pageInits[page]) {
+        if (!this.pageInits[page] || (this.token === null && ["home", "admin-panel"].includes(page))) {
             page = "login";
         }
 
@@ -62,7 +71,7 @@ window.app = () => ({
         }
 
         // Reset some ui stuff between pages
-        this.loginError = false;
+        this.loginError = 0;
     },
 
     get token() {
@@ -76,10 +85,93 @@ window.app = () => ({
     pageInits: {
         "login": t => t,
         "admin-login": t => t,
-        "home": t => t,
-        "admin-panel": async t => {
-            t.elections = await t.sendMessage("getElections");
+        "home": t => {
+            t.initTippy();
+
+            // noinspection JSIgnoredPromiseFromCall
+            t.subTo("userVotes", data => {
+                const sortedData = [...data].sort((a, b) => a.order - b.order);
+
+                // TODO: Use onDisconnect library to notify user their stuff has been updated
+
+                t.userVotes = sortedData;
+                const index = t.getCurrentUserVoteIndex();
+                t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
+
+                if (index === -1) {
+                    t.modal = null;
+                    // TODO: Notification
+                }
+            });
+
+            t.$watch("currentUserVote", () => t.selectedCandidateName = "");
+        },
+        "admin-panel": t => {
+            // noinspection JSIgnoredPromiseFromCall
+            t.subTo("committees", data => {
+                t.committees = [...data].sort((a, b) => a.order - b.order);
+
+                if (t.modalCommittee !== null) {
+                    const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
+
+                    if (index === -1) {
+                        t.modalCommittee = null;
+                        // TODO: Notification
+                    } else {
+                        t.modalCommittee = t.committees[index];
+                    }
+                }
+
+                t.initTippy();
+            });
+
+            // noinspection JSIgnoredPromiseFromCall
+            t.subTo("users", data => {
+                if (t.modalUser !== null) {
+                    const index = data.findIndex(u => u.id === t.modalUser.id);
+
+                    if (index === -1) {
+                        t.modalUser = null;
+                        // TODO: Notification
+                    } else {
+                        t.modalUser.name = data[index].name;
+                    }
+                }
+
+                t.users = data;
+
+                t.initTippy();
+            });
+
+            t.sendMessage("allVotes").then(votes => {
+                t.votes = votes;
+
+                t.initTippy();
+
+                // noinspection JSIgnoredPromiseFromCall
+                t.subTo("votes", data => {
+                    const index = t.votes.findIndex(v => v.userId === data.vote.userId && v.committeeId === data.vote.committeeId);
+
+                    if (data.add && index === -1) {
+                        t.votes.push(data.vote);
+                    }
+
+                    if (data.remove && index !== -1) {
+                        t.votes.splice(index, 1);
+                    }
+
+                    if (data.change && index !== -1) {
+                        t.votes[index].isCast = true;
+                    }
+
+                    t.initTippy();
+                });
+            }).then();
         }
+    },
+
+    onDisconnect() {
+        // TODO: pls refresh error (ng-notifications-bar or notie)
     },
 
     sendMessage(type, data = {}) {
@@ -93,25 +185,39 @@ window.app = () => ({
         });
     },
 
-    showModal(title, text, onAccept = null) {
-        this.modal = {title, text, onAccept};
+    async subTo(type, callback) {
+        this._subs[type] = callback;
+
+        const response = await this.sendMessage(type);
+        callback(response);
+    },
+
+    showModal(title, text, onAccept = null, acceptClass = "is-danger") {
+        this.modal = {title, text, onAccept, acceptClass};
     },
 
     async login() {
-        const hash = new SHA3(256);
-        hash.update(this.$refs.key.value);
+        if (this.loginError === 1) {
+            return;
+        }
 
-        const {ok, token} = await this.sendMessage("auth", {key: hash.digest("hex")});
+        this.loginError = 1;
+        const {ok, token} = await this.sendMessage("auth", {key: this.$refs.key.value});
 
         if (ok) {
             this.token = token;
             this.page = "home";
         } else {
-            this.loginError = true;
+            this.loginError = 2;
         }
     },
 
     async adminLogin() {
+        if (this.loginError === 1) {
+            return;
+        }
+
+        this.loginError = 1;
         const hash = new SHA3(256);
         hash.update(this.$refs.password.value);
 
@@ -124,74 +230,312 @@ window.app = () => ({
             this.token = token;
             this.page = "admin-panel";
         } else {
-            this.loginError = true;
+            this.loginError = 2;
         }
     },
 
-    manageElection(election) {
-        // TODO
+    async signOutTo(redirectPage) {
+        this.page = redirectPage;
+
+        try {
+            await this.sendMessage("signOut");
+        } catch (e) {
+            // This doesn't work, but the dc handler suggest a reload anyways
+            location.reload();
+        } finally {
+            this.token = null;
+        }
     },
 
-    editElection(election) {
-        this.modalElection = election;
+    initTippy(pass = false) {
+        if (!pass) {
+            this.$nextTick(() => this.initTippy(true));
+        }
 
-        this.$nextTick(() => {
-            for (const tagsfield of document.querySelectorAll(".tagsfield")) {
-                new Tagsfield(tagsfield);
+        // noinspection JSUnusedGlobalSymbols
+        const instances = tippy("[data-tippy-content]:not(.has-tippy)", {
+            animation: "perspective",
+            onTrigger(instance) {
+                const content = instance.reference.dataset.tippyContent;
+                if (content !== instance.props.content) {
+                    instance.setContent(content);
+                }
+
+                if (!instance.props.hideOnClick) {
+                    instance.reference.addEventListener("click", () => {
+                        instance.setContent("Kopyalandı!");
+                    }, {once: true});
+                }
+            },
+            onHidden(instance) {
+                if (!instance.props.hideOnClick) {
+                    instance.setContent("Anahtarı Kopyala");
+                }
             }
+        });
+
+        instances.forEach(i => i.reference.classList.add("has-tippy"));
+
+        document.querySelectorAll(".has-fixed-size-small,.has-fixed-size-big").forEach(div => {
+            div.addEventListener("scroll", () => instances.forEach(i => i.hide()));
         });
     },
 
-    async saveElection() {
-        if (this.savingElection) {
+    getCurrentUserVoteIndex() {
+        return this.userVotes.findIndex(v => v.id === this.currentUserVote);
+    },
+
+    previousUserVote() {
+        if (this.currentUserVote === this.userVotes[0].id) {
             return;
         }
-        this.savingElection = true;
 
-        const index = this.elections.indexOf(this.modalElection);
+        const index = this.getCurrentUserVoteIndex();
+        this.currentUserVote = this.userVotes[index - 1].id;
+    },
+
+    nextUserVote() {
+        if (this.currentUserVote === this.userVotes[this.userVotes.length - 1].id) {
+            return;
+        }
+
+        const index = this.getCurrentUserVoteIndex();
+        this.currentUserVote = this.userVotes[index + 1].id;
+    },
+
+    showVoteModal() {
+        if (this.selectedCandidateName.length === 0) {
+            return;
+        }
+
+        this.showModal(
+            "Oy Kullan",
+            `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" isimli adaya kullanacaksınız. Emin misiniz?`,
+            () => {
+                // noinspection JSUnresolvedVariable
+                this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName});
+            },
+            "is-success"
+        );
+    },
+
+    toggleCommitteeVisible(committee) {
+        committee.visible = !committee.visible;
+
+        this.sendMessage("upsertCommittee", committee);
+    },
+
+    editCommittee(committee) {
+        this.candidateDeleteError = false;
+        this.modalCommitteeCandidatesTemp = [];
+        this.modalCommittee = committee;
+
+        this.$nextTick(() => {
+            new Tagsfield(document.querySelector(".tagsfield"), this);
+
+            this.initTippy();
+        });
+    },
+
+    updateCandidates() {
+        const tags = this.$refs.candidates.querySelectorAll("span.tag");
+
+        this.modalCommitteeCandidatesTemp = Array.from(tags, tag => {
+            return {
+                name: tag.innerText,
+                votes: this.modalCommittee.candidates.find(c => c.name === tag.innerText).votes
+            };
+        });
+    },
+
+    async saveCommittee() {
+        if (this.modalIsLoading) {
+            return;
+        }
+        this.modalIsLoading = true;
+
+        this.modalCommittee.candidates = this.modalCommitteeCandidatesTemp;
+        const index = this.committees.indexOf(this.modalCommittee);
+
         if (index === -1) {
-            this.modalElection.id = await this.sendMessage("createElection", this.modalElection);
-            this.elections.push(this.modalElection);
-        } else {
-            await this.sendMessage("updateElection", this.modalElection);
+            this.modalCommittee.order = this.committees[this.committees.length - 1] + 1;
         }
 
-        this.modalElection = null;
-        this.savingElection = false;
+        await this.sendMessage("upsertCommittee", this.modalCommittee);
+
+        this.modalCommittee = null;
+        this.modalIsLoading = false;
     },
 
-    deleteElection(election) {
-        this.showModal("Seçimi Sil", `"${election.name}" isimli seçimi silmek istediğinize emin misiniz?`, () => {
-            // noinspection JSUnresolvedVariable
-            this.sendMessage("deleteElection", {id: election.id});
-
-            const index = this.elections.indexOf(election);
-            if (index !== -1) {
-                this.elections.splice(index, 1);
-            }
-        });
+    modalCommitteeSum() {
+        return this.votes.reduce((sum, vote) => vote.committeeId === this.modalCommittee.id ? sum + 1 : sum, 0);
     },
 
-    createCategory() {
-        this.modalElection.categories.push({name: "", candidates: []});
-
-        this.$nextTick(() => {
-            new Tagsfield(document.querySelector(".tagsfield:not(.ready)"));
-            document.querySelector("input[autofocus=\"autofocus\"]").focus();
-        });
+    emptyVotesCount() {
+        return this.modalCommitteeSum() - this.modalCommittee.candidates.reduce((a, b) => a + b.votes, 0);
     },
 
-    moveCategory(index, moveTo) {
-        const categories = this.modalElection.categories;
+    candidateVotes(candidate) {
+        return `(${candidate.votes} / ${this.modalCommitteeSum()})`;
+    },
 
-        if (moveTo < 0 || moveTo > categories.length - 1) {
+    candidatePercent(candidate) {
+        const sum = this.modalCommitteeSum();
+
+        return `%${sum > 0 ? Math.round((candidate.votes / sum) * 100) : 0}`;
+    },
+
+    unusedVotes() {
+        return `(${this.emptyVotesCount()} / ${this.modalCommitteeSum()})`;
+    },
+
+    unusedPercent() {
+        const sum = this.modalCommitteeSum();
+
+        return `%${sum > 0 ? Math.round((this.emptyVotesCount() / sum) * 100) : 0}`;
+    },
+
+    moveCommitteeUp(committee) {
+        if (committee.order === this.committees[0].order) {
             return;
         }
 
-        [categories[index], categories[moveTo]] = [categories[moveTo], categories[index]];
+        let order = committee.order - 1;
+        while (order >= this.committees[0].order) {
+            const swapCommittee = this.committees.find(c => c.order === order);
+
+            if (swapCommittee) {
+                swapCommittee.order = committee.order;
+
+                this.sendMessage("upsertCommittee", swapCommittee);
+
+                break;
+            }
+
+            order--;
+        }
+
+        committee.order = order;
+
+        this.sendMessage("upsertCommittee", committee);
     },
 
-    removeCategory(index) {
-        this.modalElection.categories.splice(index, 1);
+    moveCommitteeDown(committee) {
+        if (committee.order === this.committees[this.committees.length - 1].order) {
+            return;
+        }
+
+        let order = committee.order + 1;
+        while (order <= this.committees[this.committees.length - 1].order) {
+            const swapCommittee = this.committees.find(c => c.order === order);
+
+            if (swapCommittee) {
+                swapCommittee.order = committee.order;
+
+                this.sendMessage("upsertCommittee", swapCommittee);
+
+                break;
+            }
+
+            order++;
+        }
+
+        committee.order = order;
+
+        this.sendMessage("upsertCommittee", committee);
+    },
+
+    deleteCommittee(committee) {
+        this.showModal("Komiteyi Sil", `"${committee.name}" isimli komiteyi silmek istediğinize emin misiniz?`, () => {
+            // noinspection JSUnresolvedVariable
+            this.sendMessage("deleteCommittee", {id: committee.id});
+        });
+    },
+
+    editUser(user) {
+        this.modalUser = user;
+
+        if (!user.id) {
+            this.sendMessage("generateKey").then(key => this.modalUser.key = key);
+        }
+
+        this.initTippy();
+    },
+
+    async saveUser() {
+        if (this.modalIsLoading) {
+            return;
+        }
+        this.modalIsLoading = true;
+
+        await this.sendMessage("upsertUser", this.modalUser);
+
+        this.modalUser = null;
+        this.modalIsLoading = false;
+    },
+
+    copyKeyToClipboard(user) {
+        return navigator.clipboard.writeText(user.key);
+    },
+
+    deleteUser(user) {
+        if (this.votedAny(user)) {
+            return;
+        }
+
+        this.showModal("Kullanıcıyı Sil", `"${user.name}" isimli kullanıcıyı silmek istediğinize emin misiniz?`, () => {
+            // noinspection JSUnresolvedVariable
+            this.sendMessage("deleteUser", {id: user.id});
+        });
+    },
+
+    votableCommittees() {
+        return this.votes.filter(vote => {
+            return vote.userId === this.modalUser.id;
+        }).map(vote => {
+            return this.committees.find(committee => {
+                return committee.id === vote.committeeId;
+            });
+        });
+    },
+
+    // 0: can't vote, 1: can vote, 2: has cast vote, 3: no committee
+    voteStatus(user, committeeId = this.modalCommittee.id) {
+        if (!committeeId) {
+            return 3;
+        }
+
+        const vote = this.votes.find(vote =>
+            vote.userId === user.id &&
+            vote.committeeId === committeeId
+        );
+
+        if (vote) {
+            return 1 + vote.isCast;
+        } else {
+            return 0;
+        }
+    },
+
+    // Like voteStatus but checks for all committees
+    votedAny(user) {
+        return this.votes.some(vote => vote.userId === user.id && vote.isCast);
+    },
+
+    toggleVote(user) {
+        const current = this.voteStatus(user);
+        const vote = {userId: user.id, committeeId: this.modalCommittee.id, isCast: false};
+
+        if (current === 0) {
+            this.votes.push(vote);
+            this.sendMessage("addVote", vote);
+        } else if (current === 1) {
+            const index = this.votes.findIndex(v => v.userId === vote.userId && v.committeeId === vote.committeeId);
+
+            if (index !== -1) {
+                this.votes.splice(index, 1);
+                this.sendMessage("removeVote", vote);
+            }
+        }
     }
 });
