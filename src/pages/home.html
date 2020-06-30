@@ -5,8 +5,13 @@
 
         <template x-if="userVotes.length === 0">
             <div class="box is-marginless">
-                TODO: Şuanda oy verebileceğiniz bir komite bulunmuyor
-                Cute lil image of empty box? cat looking at empty box etc etc
+                <div class="card">
+                    <div class="card-content px-3">
+                        <p class="mb-3 is-size-4">Şuan oy verebileceğin bir komite yok gibi görünüyor. Bu sayfada bekleyebilirsin; komiteler güncellenince burada belirecekler.</p>
+                        <!--suppress HtmlUnknownTarget -->
+                        <img src="undraw_a_moment_to_relax_bbpa.svg" alt="voting">
+                    </div>
+                </div>
             </div>
         </template>
 
@@ -49,16 +54,19 @@
                 <div class="card">
                     <div class="card-content px-3">
                         <template x-if="userVotes.find(v => v.id === currentUserVote).isCast">
-                            <p>TODO: ${Bu komite} için oyunuzu kullandınız. Cute lil image of voter</p>
+                            <div>
+                                <p class="mb-3 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için zaten oyunu kullandın.`"></p>
+                                <!--suppress HtmlUnknownTarget -->
+                                <img src="undraw_voting_nvu7.svg" alt="voting">
+                            </div>
                         </template>
 
                         <template x-if="userVotes.find(v => v.id === currentUserVote).candidateNames">
                             <div class="buttons">
                                 <template x-for="candidateName in userVotes.find(v => v.id === currentUserVote).candidateNames">
-                                    <!-- TODO: Styling of these buttons -->
                                     <button
                                             class="button is-fullwidth is-size-6-mobile is-size-5-tablet"
-                                            :class="{'is-primary': candidateName === selectedCandidateName}"
+                                            :class="{'is-success': candidateName === selectedCandidateName}"
                                             x-text="candidateName"
                                             @click="selectedCandidateName = candidateName"
                                     ></button>
@@ -70,6 +78,7 @@
 
                 <div class="is-flex has-content-justified-center-tablet">
                     <button
+                            x-show="userVotes.find(v => v.id === currentUserVote).candidateNames"
                             class="button is-primary is-medium is-fullwidth-mobile mt-4"
                             :disabled="selectedCandidateName.length === 0"
                             @click="showVoteModal()"

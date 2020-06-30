@@ -91,18 +91,22 @@ window.app = () => ({
 
             // noinspection JSIgnoredPromiseFromCall
             t.subTo("userVotes", data => {
+                if (data.length === 0) {
+                    return;
+                }
+
                 const sortedData = [...data].sort((a, b) => a.order - b.order);
 
                 t.userVotes = sortedData;
                 const index = t.getCurrentUserVoteIndex();
                 t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
 
-                if (index === -1) {
+                if (index === -1 && t.modal) {
                     t.modal = null;
 
-                    t.showNotification("😵 Oy vermek üzere olduğunuz komite kaldırıldı");
+                    t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
                 } else {
-                    t.showNotification("Oy kullanabildiğiniz komiteler güncellendi", "info");
+                    t.showNotification("Oy kullanabildiğin komiteler güncellendi", "info");
                 }
             });
 
@@ -119,7 +123,7 @@ window.app = () => ({
                     if (index === -1) {
                         t.modalCommittee = null;
 
-                        t.showNotification("😵 Üzerinde çalıştığınız komite silindi!");
+                        t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
                     } else {
                         t.modalCommittee = t.committees[index];
                     }
@@ -136,7 +140,7 @@ window.app = () => ({
                     if (index === -1) {
                         t.modalUser = null;
 
-                        t.showNotification("😵 Üzerinde çalıştığınız kullanıcı silindi!");
+                        t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
                     } else {
                         t.modalUser.name = data[index].name;
                     }
@@ -175,7 +179,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        this.showNotification("Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenileyin", "danger", 0, false);
+        this.showNotification("Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenile", "danger", 0, false);
     },
 
     sendMessage(type, data = {}) {
