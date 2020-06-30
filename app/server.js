@@ -79,3 +79,5 @@ wss.on("connection", ws => {
         }
     });
 });
+
+setInterval(() => wss.clients.forEach(client => client.ping()), 30000);
