@@ -418,7 +418,7 @@ window.app = () => ({
             if (this.committees.length === 0) {
                 this.modalCommittee.order = 0;
             } else {
-                this.modalCommittee.order = this.committees[this.committees.length - 1] + 1;
+                this.modalCommittee.order = this.committees[this.committees.length - 1].order + 1;
             }
         }
 
