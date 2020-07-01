@@ -36,13 +36,26 @@ window.app = () => ({
 
     init() {
         this.$watch("page", page => this.pageInits[page](this));
-        window.addEventListener("popstate", e => this.page = e.state);
+        window.addEventListener("popstate", e => {
+            if (e.state) {
+                this.page = e.state;
+            }
+        });
 
-        this.ws = new WebSocket(`ws://${location.hostname}:5050`);
+        // TODO: Change this with parcel build-time if else check
+        this.ws = new WebSocket(`ws://${location.hostname}:5452`);
 
         this.ws.addEventListener("open", () => {
             // Some initial route handing
-            this.page = location.pathname.slice(1);
+            const pathname = location.pathname.slice(1);
+
+            if (pathname.length === 0) {
+                history.replaceState("login", "", "login");
+
+                this._page = "login";
+            } else {
+                this.page = pathname;
+            }
         });
         this.ws.addEventListener("message", event => {
             const message = JSON.parse(event.data);
