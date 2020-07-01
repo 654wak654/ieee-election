@@ -60,7 +60,7 @@
                 <section class="modal-card-body" x-text="modal.text"></section>
                 <footer class="modal-card-foot has-content-justified-right">
                     <button class="button" @click="modal = null">İptal</button>
-                    <button x-show="modal.onAccept !== null" class="button" :class="{[modal.acceptClass]: true}" @click="modal.onAccept(); modal = null">Evet</button>
+                    <button class="button" :class="{[modal.acceptClass]: true, 'is-loading': modalIsLoading}" @click="onModalAccept()">Evet</button>
                 </footer>
             </div>
         </div>

@@ -9,6 +9,7 @@ import Tagsfield from "./tagsfield";
 window.app = () => ({
     loginError: 0,
     modal: null,
+    modalIsLoading: false,
     notification: {show: false},
 
     _page: null,
@@ -30,7 +31,6 @@ window.app = () => ({
     votes: [],
 
     candidateDeleteError: false,
-    modalIsLoading: false,
     userSearch: "",
 
     init() {
@@ -202,8 +202,20 @@ window.app = () => ({
         callback(response);
     },
 
-    showModal(title, text, onAccept = null, acceptClass = "is-danger") {
+    showModal(title, text, onAccept, acceptClass = "is-danger") {
         this.modal = {title, text, onAccept, acceptClass};
+    },
+
+    async onModalAccept() {
+        if (this.modalIsLoading) {
+            return;
+        }
+        this.modalIsLoading = true;
+
+        await this.modal.onAccept();
+
+        this.modal = null;
+        this.modalIsLoading = false;
     },
 
     showNotification(message, type = "danger", time = 3300, dismissible = true) {
@@ -335,10 +347,7 @@ window.app = () => ({
         this.showModal(
             "Oy Kullan",
             `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" isimli adaya kullanacaksınız. Emin misiniz?`,
-            () => {
-                // noinspection JSUnresolvedVariable
-                this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName});
-            },
+            () => this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName}),
             "is-success"
         );
     },
@@ -476,10 +485,11 @@ window.app = () => ({
     },
 
     deleteCommittee(committee) {
-        this.showModal("Komiteyi Sil", `"${committee.name}" isimli komiteyi silmek istediğinize emin misiniz?`, () => {
-            // noinspection JSUnresolvedVariable
-            this.sendMessage("deleteCommittee", {id: committee.id});
-        });
+        this.showModal(
+            "Komiteyi Sil",
+            `"${committee.name}" isimli komiteyi silmek istediğinize emin misiniz?`,
+            () => this.sendMessage("deleteCommittee", {id: committee.id})
+        );
     },
 
     editUser(user) {
@@ -513,10 +523,11 @@ window.app = () => ({
             return;
         }
 
-        this.showModal("Kullanıcıyı Sil", `"${user.name}" isimli kullanıcıyı silmek istediğinize emin misiniz?`, () => {
-            // noinspection JSUnresolvedVariable
-            this.sendMessage("deleteUser", {id: user.id});
-        });
+        this.showModal(
+            "Kullanıcıyı Sil",
+            `"${user.name}" isimli kullanıcıyı silmek istediğinize emin misiniz?`,
+            () => this.sendMessage("deleteUser", {id: user.id})
+        );
     },
 
     votableCommittees() {
