@@ -103,7 +103,7 @@ window.app = () => ({
                 const index = t.getCurrentUserVoteIndex();
                 t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
 
-                if (index === -1 && t.modal) {
+                if (t.modal && index === -1) {
                     t.modal = null;
 
                     t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
