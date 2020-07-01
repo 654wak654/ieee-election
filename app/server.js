@@ -5,7 +5,8 @@ const WebSocket = require("ws");
 const Endpoint = require("./endpoint");
 
 const wss = new WebSocket.Server({
-    port: 5050
+    host: "localhost",
+    port: 5452
 });
 
 wss.on("connection", ws => {
