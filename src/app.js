@@ -3,14 +3,16 @@ import tippy from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
-// TODO: Auto reconnect
+// TODO: Auto reconnect (Refresh reconnect is also broken?)
+// TODO: Run linter (for server side too)
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: 0,
     modal: null,
     modalIsLoading: false,
-    notification: {show: false},
+    notification: {show: false, type: "is-danger"},
+    notificationTimeout: null,
 
     _page: null,
     _queue: {},
@@ -125,7 +127,7 @@ window.app = () => ({
                 } else if (t.firstTimeInHomePage) {
                     t.firstTimeInHomePage = false;
                 } else {
-                    t.showNotification("Oy kullanabildiğin komiteler güncellendi", "info");
+                    t.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
                 }
             });
 
@@ -198,7 +200,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen tekrar giriş yap", "danger", 0, false);
+        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen tekrar giriş yap", "is-danger", 0, false);
     },
 
     sendMessage(type, data = {}) {
@@ -235,17 +237,21 @@ window.app = () => ({
         this.modalIsLoading = false;
     },
 
-    showNotification(message, type = "danger", time = 3300, dismissible = true) {
+    showNotification(message, type = "is-danger", time = 3300, dismissible = true) {
         if (this.notification.show) {
             this.notification.show = false;
 
+            clearTimeout(this.notificationTimeout);
+
             setTimeout(() => this.showNotification(message, type, time, dismissible), 300);
+
+            return;
         }
 
         this.notification = {show: true, message, type, dismissible};
 
         if (time > 0) {
-            setTimeout(() => this.notification.show = false, time);
+            this.notificationTimeout = setTimeout(() => this.notification.show = false, time);
         }
     },
 

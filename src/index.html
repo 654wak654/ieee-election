@@ -26,7 +26,7 @@
             x-transition:leave-start="transform-translateY-100"
             x-transition:leave-end="transform-translateY-0"
             class="notification"
-            :class="{'is-info': notification.type === 'info', 'is-danger': notification.type === 'danger'}"
+            :class="{[notification.type]: true}"
     >
         <button x-show="notification.dismissible" class="delete" @click="notification.show = false"></button>
         <div x-text="notification.message"></div>
