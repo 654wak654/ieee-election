@@ -7,7 +7,8 @@
     "scripts": {
         "build": "node build.js",
         "dev": "parcel src/index.html --port 5000",
-        "start": "node app/server.js"
+        "start": "node app/server.js",
+        "lint": "eslint app && eslint src/app.js"
     },
     "browserslist": [
         "since 2019 and last 3 versions and > 0.1%"
