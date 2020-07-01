@@ -120,6 +120,8 @@ class Endpoint {
         await db.deleteCommittee(id);
 
         this.propagateCommitteesAndUserVotes();
+
+        return {};
     }
 
     propagateCommitteesAndUserVotes() {
@@ -152,6 +154,8 @@ class Endpoint {
         for (const sub of subs.users) {
             sub.send(JSON.stringify({topic: "users", data: db.getUsers()}));
         }
+
+        return {};
     }
 
     generateKey() {
@@ -223,6 +227,8 @@ class Endpoint {
 
             this.propagateCommitteesAndUserVotes();
         }
+
+        return {};
     }
 }
 
