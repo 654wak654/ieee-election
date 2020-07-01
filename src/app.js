@@ -3,7 +3,12 @@ import tippy from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
+// TODO: Mails to users
 // TODO: Auto reconnect (Refresh reconnect is also broken?)
+
+// TODO: Subs aren't updated?
+//  Votes aren't updated on commitee delete?
+//  userVotes aren't updated
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({

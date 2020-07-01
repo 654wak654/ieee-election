@@ -4,7 +4,7 @@
 const {SHA3} = require("sha3");
 const db = require("./db");
 
-// TODO: Logging
+// TODO: Logging (put in different db file)
 
 const sessions = [];
 const subs = {
