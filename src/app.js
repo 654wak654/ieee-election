@@ -3,6 +3,8 @@ import tippy from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
+// TODO: Auto reconnect
+
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: 0,

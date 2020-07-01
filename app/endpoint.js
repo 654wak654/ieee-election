@@ -3,6 +3,8 @@
 const {SHA3} = require("sha3");
 const db = require("./db");
 
+// TODO: Logging
+
 const sessions = [];
 const subs = {
     committees: [],
