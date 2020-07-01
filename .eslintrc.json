@@ -5,6 +5,7 @@
     },
     "rules": {
         "array-bracket-spacing": ["warn", "never"],
+        "capitalized-comments": "warn",
         "func-style": ["error", "declaration"],
         "global-require": "off",
         "id-length": "off",
@@ -16,14 +17,17 @@
         "no-else-return": "off",
         "no-inline-comments": "off",
         "no-loop-func": "off",
+        "no-new": "off",
         "no-param-reassign": ["warn", {"props": false}],
         "no-plusplus": "off",
+        "no-return-assign": "off",
         "no-underscore-dangle": "off",
         "no-use-before-define": ["error", {"functions": false}],
         "no-warning-comments": "warn",
         "object-curly-spacing": ["warn", "never"],
         "quotes": ["error", "double"],
         "radix": ["error", "as-needed"],
+        "sort-imports": "off",
         "space-before-function-paren": ["warn", {"named": "never"}]
     }
 }

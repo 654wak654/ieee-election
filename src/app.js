@@ -4,7 +4,6 @@ import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
 // TODO: Auto reconnect (Refresh reconnect is also broken?)
-// TODO: Run linter (for server side too)
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
@@ -37,7 +36,6 @@ window.app = () => ({
     userSearch: "",
 
     init() {
-        this.$watch("page", page => this.pageInits[page](this));
         window.addEventListener("popstate", e => {
             if (e.state) {
                 this.page = e.state;
@@ -79,8 +77,10 @@ window.app = () => ({
     },
 
     set page(page) {
-        if (!this.pageInits[page] || (this.token === null && ["home", "admin-panel"].includes(page))) {
-            page = "login";
+        if (!["login", "admin-login", "home", "admin-panel"].includes(page) || (this.token === null && ["home", "admin-panel"].includes(page))) {
+            this.page = "login";
+
+            return;
         }
 
         this._page = page;
@@ -88,6 +88,15 @@ window.app = () => ({
         if (page !== history.state) {
             history.pushState(page, "", page);
         }
+
+        this.$nextTick(() => {
+            if (page === "home") {
+                this.initHome();
+            }
+            if (page === "admin-panel") {
+                this.initAdminPanel();
+            }
+        });
 
         // Reset some ui stuff between pages
         this.loginError = 0;
@@ -101,102 +110,95 @@ window.app = () => ({
         sessionStorage.setItem("token", token);
     },
 
-    pageInits: {
-        "login": t => t,
-        "admin-login": t => t,
-        "home": t => {
-            t.initTippy();
+    initHome() {
+        this.initTippy();
 
-            t.firstTimeInHomePage = true;
+        this.firstTimeInHomePage = true;
 
-            // noinspection JSIgnoredPromiseFromCall
-            t.subTo("userVotes", data => {
-                const sortedData = [...data].sort((a, b) => a.order - b.order);
+        this.subTo("userVotes", data => {
+            const sortedData = [...data].sort((a, b) => a.order - b.order);
 
-                t.userVotes = sortedData;
-                const index = t.getCurrentUserVoteIndex();
+            this.userVotes = sortedData;
+            const index = this.getCurrentUserVoteIndex();
 
-                if (data.length > 0) {
-                    t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
-                }
+            if (data.length > 0) {
+                this.currentUserVote = sortedData[index < 0 ? 0 : index].id;
+            }
 
-                if (t.modal && index === -1) {
-                    t.modal = null;
+            if (this.modal && index === -1) {
+                this.modal = null;
 
-                    t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
-                } else if (t.firstTimeInHomePage) {
-                    t.firstTimeInHomePage = false;
+                this.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
+            } else if (this.firstTimeInHomePage) {
+                this.firstTimeInHomePage = false;
+            } else {
+                this.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
+            }
+        });
+
+        this.$watch("currentUserVote", () => this.selectedCandidateName = "");
+    },
+
+    initAdminPanel() {
+        this.subTo("committees", data => {
+            this.committees = [...data].sort((a, b) => a.order - b.order);
+
+            if (this.modalCommittee !== null && this.modalCommittee.id) {
+                const index = this.committees.findIndex(c => c.id === this.modalCommittee.id);
+
+                if (index === -1) {
+                    this.modalCommittee = null;
+
+                    this.showNotification("😵 Üzerinde çalıştığın komite silindi!");
                 } else {
-                    t.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
+                    this.modalCommittee = this.committees[index];
                 }
-            });
+            }
 
-            t.$watch("currentUserVote", () => t.selectedCandidateName = "");
-        },
-        "admin-panel": t => {
-            // noinspection JSIgnoredPromiseFromCall
-            t.subTo("committees", data => {
-                t.committees = [...data].sort((a, b) => a.order - b.order);
+            this.initTippy();
+        });
 
-                if (t.modalCommittee !== null && t.modalCommittee.id) {
-                    const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
+        this.subTo("users", data => {
+            if (this.modalUser !== null && this.modalUser.id) {
+                const index = data.findIndex(u => u.id === this.modalUser.id);
 
-                    if (index === -1) {
-                        t.modalCommittee = null;
+                if (index === -1) {
+                    this.modalUser = null;
 
-                        t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
-                    } else {
-                        t.modalCommittee = t.committees[index];
-                    }
+                    this.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
+                } else {
+                    this.modalUser.name = data[index].name;
                 }
+            }
 
-                t.initTippy();
-            });
+            this.users = data;
 
-            // noinspection JSIgnoredPromiseFromCall
-            t.subTo("users", data => {
-                if (t.modalUser !== null && t.modalUser.id) {
-                    const index = data.findIndex(u => u.id === t.modalUser.id);
+            this.initTippy();
+        });
 
-                    if (index === -1) {
-                        t.modalUser = null;
+        this.sendMessage("allVotes").then(votes => {
+            this.votes = votes;
 
-                        t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
-                    } else {
-                        t.modalUser.name = data[index].name;
-                    }
+            this.initTippy();
+
+            this.subTo("votes", data => {
+                const index = this.votes.findIndex(v => v.userId === data.vote.userId && v.committeeId === data.vote.committeeId);
+
+                if (data.add && index === -1) {
+                    this.votes.push(data.vote);
                 }
 
-                t.users = data;
+                if (data.remove && index !== -1) {
+                    this.votes.splice(index, 1);
+                }
 
-                t.initTippy();
+                if (data.change && index !== -1) {
+                    this.votes[index].isCast = true;
+                }
+
+                this.initTippy();
             });
-
-            t.sendMessage("allVotes").then(votes => {
-                t.votes = votes;
-
-                t.initTippy();
-
-                // noinspection JSIgnoredPromiseFromCall
-                t.subTo("votes", data => {
-                    const index = t.votes.findIndex(v => v.userId === data.vote.userId && v.committeeId === data.vote.committeeId);
-
-                    if (data.add && index === -1) {
-                        t.votes.push(data.vote);
-                    }
-
-                    if (data.remove && index !== -1) {
-                        t.votes.splice(index, 1);
-                    }
-
-                    if (data.change && index !== -1) {
-                        t.votes[index].isCast = true;
-                    }
-
-                    t.initTippy();
-                });
-            }).then();
-        }
+        }).then();
     },
 
     onDisconnect() {
@@ -205,7 +207,6 @@ window.app = () => ({
 
     sendMessage(type, data = {}) {
         return new Promise(resolve => {
-            // noinspection JSUnresolvedVariable
             this.ws.send(JSON.stringify({id: this._queueId, token: this.token, type, data}));
 
             this._queue[this._queueId] = resolve;
@@ -214,11 +215,10 @@ window.app = () => ({
         });
     },
 
-    async subTo(type, callback) {
+    subTo(type, callback) {
         this._subs[type] = callback;
 
-        const response = await this.sendMessage(type);
-        callback(response);
+        this.sendMessage(type).then(response => callback(response));
     },
 
     showModal(title, text, onAccept, acceptClass = "is-danger") {
@@ -278,6 +278,7 @@ window.app = () => ({
 
         this.loginError = 1;
         const hash = new SHA3(256);
+
         hash.update(this.$refs.password.value);
 
         const {ok, token} = await this.sendMessage("adminAuth", {
@@ -298,7 +299,7 @@ window.app = () => ({
 
         try {
             await this.sendMessage("signOut");
-        } catch (e) {
+        } catch {
             // This doesn't work, but the dc handler suggest a reload anyways
             location.reload();
         } finally {
@@ -316,6 +317,7 @@ window.app = () => ({
             animation: "perspective",
             onTrigger(instance) {
                 const content = instance.reference.dataset.tippyContent;
+
                 if (content !== instance.props.content) {
                     instance.setContent(content);
                 }
@@ -349,8 +351,7 @@ window.app = () => ({
             return;
         }
 
-        const index = this.getCurrentUserVoteIndex();
-        this.currentUserVote = this.userVotes[index - 1].id;
+        this.currentUserVote = this.userVotes[this.getCurrentUserVoteIndex() - 1].id;
     },
 
     nextUserVote() {
@@ -358,8 +359,7 @@ window.app = () => ({
             return;
         }
 
-        const index = this.getCurrentUserVoteIndex();
-        this.currentUserVote = this.userVotes[index + 1].id;
+        this.currentUserVote = this.userVotes[this.getCurrentUserVoteIndex() + 1].id;
     },
 
     showVoteModal() {
@@ -396,7 +396,7 @@ window.app = () => ({
     updateCandidates() {
         const tags = this.$refs.candidates.querySelectorAll("span.tag");
 
-        this.modalCommitteeCandidatesTemp = Array.from(tags, tag => {
+        this.modalCommitteeCandidatesTemp = [...tags].map(tag => {
             const candidate = this.modalCommittee.candidates.find(c => c.name === tag.innerText);
 
             return {
@@ -463,6 +463,7 @@ window.app = () => ({
         }
 
         let order = committee.order - 1;
+
         while (order >= this.committees[0].order) {
             const swapCommittee = this.committees.find(c => c.order === order);
 
@@ -488,6 +489,7 @@ window.app = () => ({
         }
 
         let order = committee.order + 1;
+
         while (order <= this.committees[this.committees.length - 1].order) {
             const swapCommittee = this.committees.find(c => c.order === order);
 
@@ -554,13 +556,7 @@ window.app = () => ({
     },
 
     votableCommittees() {
-        return this.votes.filter(vote => {
-            return vote.userId === this.modalUser.id;
-        }).map(vote => {
-            return this.committees.find(committee => {
-                return committee.id === vote.committeeId;
-            });
-        });
+        return this.votes.filter(vote => vote.userId === this.modalUser.id).map(vote => this.committees.find(committee => committee.id === vote.committeeId));
     },
 
     // 0: can't vote, 1: can vote, 2: has cast vote, 3: no committee
@@ -569,10 +565,7 @@ window.app = () => ({
             return 3;
         }
 
-        const vote = this.votes.find(vote =>
-            vote.userId === user.id &&
-            vote.committeeId === committeeId
-        );
+        const vote = this.votes.find(v => v.userId === user.id && v.committeeId === committeeId);
 
         if (vote) {
             return 1 + vote.isCast;
