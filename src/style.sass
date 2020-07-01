@@ -34,6 +34,7 @@ html
 .opacity-100
   opacity: 100
 
+// This lets us get a nice page-top notification
 .notification
   position: fixed
   width: 100%
@@ -42,19 +43,23 @@ html
   > div
     text-align: center
 
+// For notification transitions (duh)
 .notification-transition
   transition: transform 0.25s ease-in-out
 
+// Used in notification transitions
 .transform-translateY-0
   transform: translateY(-100%)
 
+// Used in notification transitions
 .transform-translateY-100
   transform: translateY(0%)
 
-// Everything below is used for the admin-panel
-.width-100
-  width: 100%
+// For modal dialog buttons
+.has-content-justified-right
+  justify-content: flex-end
 
+// Makes modals fade-in
 .modal.is-active
   animation: 0.25s ease-out 0s 1 normal both running fadein
 
@@ -65,28 +70,35 @@ html
   to
     opacity: 100
 
+/*
+ * Everything below is used for the admin-panel
+ */
+
+// Helps with panel-block button alignment
+.width-100
+  width: 100%
+
+// Fixes panel-heading with icon
 .vertical-middle > span
   vertical-align: middle
 
-.has-content-justified-right
-  justify-content: flex-end
-
+// Makes modals higher but not too much higher
 .modal-card-body
   max-height: 70vh
 
+// for main screen lists
 .has-fixed-size-big
   height: 45vh
   overflow-y: auto
   overflow-x: hidden
 
+// for modal lists
 .has-fixed-size-small
   height: 20vh
   overflow-y: auto
   overflow-x: hidden
 
-.container > .card > .card-footer > .card-footer-item:not(:last-child)
-  border-right: 1px solid lightgray
-
+// Gives better spacing to panel-block items
 div.panel-block:not(.panel-block-footer)
   border-bottom: none
   padding-top: 0
@@ -96,16 +108,21 @@ div.panel-block:not(.panel-block-footer)
     white-space: nowrap
     margin: 0
 
+// Used in big actions buttons
 @media screen and (min-width: 769px), print
   .has-content-justified-center-tablet
     justify-content: center
 
+// Used in big actions buttons
 @media screen and (max-width: 768px), print
   .button.is-fullwidth-mobile
     display: flex
     width: 100%
 
-// Tagsfield stuff
+/*
+ * Everything below is tagsfield stuff
+ */
+
 //noinspection SassScssResolvedByNameOnly
 $tagsfield-spacing-vertical: calc((0.5em - #{$control-border-width}) / 2)
 
