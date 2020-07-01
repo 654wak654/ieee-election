@@ -202,7 +202,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen tekrar giriş yap", "is-danger", 0, false);
+        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenile", "is-danger", 0, false);
     },
 
     sendMessage(type, data = {}) {
