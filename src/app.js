@@ -42,8 +42,7 @@ window.app = () => ({
             }
         });
 
-        // TODO: Change this with parcel build-time if else check
-        this.ws = new WebSocket(`ws://${location.hostname}:5452`);
+        this.ws = new WebSocket(process.env.NODE_ENV === "production" ? `wss://${location.host}` : "ws://localhost:5452");
 
         this.ws.addEventListener("open", () => {
             // Some initial route handing
