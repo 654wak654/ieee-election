@@ -100,7 +100,7 @@ class Endpoint {
     userVotes(_, token) {
         const {userId} = sessions.find(s => s.token === token);
 
-        const index = subs.userVotes.findIndex(x => x.userId === userId);
+        const index = subs.userVotes.findIndex(vote => vote.userId === userId);
 
         if (index !== -1) {
             subs.userVotes.splice(index, 1);
