@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* eslint-disable class-methods-use-this */
 
 const {SHA3} = require("sha3");
 const db = require("./db");
@@ -12,6 +13,24 @@ const subs = {
     votes: [],
     userVotes: []
 };
+
+const adminMethods = [
+    "committees", "upsertCommittee", "deleteCommittee",
+    "users", "upsertUser", "deleteUser", "generateKey",
+    "votes", "addVote", "removeVote", "allVotes"
+];
+
+function getTokenFor(string) {
+    const hash = new SHA3(256);
+
+    hash.update(`${string}${Math.random()}`);
+
+    return hash.digest("hex");
+}
+
+function verify(token, type) {
+    return sessions.some(session => session.token === token && adminMethods.includes(type) === session.admin);
+}
 
 class Endpoint {
     constructor(ws) {
@@ -37,32 +56,15 @@ class Endpoint {
         }
     }
 
-    _getTokenFor(string) {
-        const hash = new SHA3(256);
-        hash.update(`${string}${Math.random()}`);
-
-        return hash.digest("hex");
-    }
-
-    _verify(token, type) {
-        return sessions.some(session =>
-            session.token === token &&
-            [
-                "committees", "upsertCommittee", "deleteCommittee",
-                "users", "upsertUser", "deleteUser", "generateKey",
-                "votes", "addVote", "removeVote", "allVotes"
-            ].includes(type) === session.admin
-        );
-    }
-
     auth({key}) {
         const user = db.getUser(key);
 
         if (user) {
-            const token = this._getTokenFor(key);
+            const token = getTokenFor(key);
 
             // Remove duplicate sessions
             const index = sessions.findIndex(s => s.userId === user.id);
+
             if (index !== -1) {
                 sessions.splice(index, 1);
             }
@@ -77,7 +79,7 @@ class Endpoint {
 
     adminAuth({username, password}) {
         if (db.hasAdmin(username, password)) {
-            const token = this._getTokenFor(password);
+            const token = getTokenFor(password);
 
             sessions.push({token, admin: true});
 
@@ -89,13 +91,14 @@ class Endpoint {
 
     signOut(_, token) {
         const index = sessions.findIndex(s => s.token === token);
+
         if (index !== -1) {
             sessions.splice(index, 1);
         }
     }
 
     userVotes(_, token) {
-        const userId = sessions.find(s => s.token === token).userId;
+        const {userId} = sessions.find(s => s.token === token);
 
         subs.userVotes.push({sub: this.ws, userId, last: ""});
 
@@ -159,10 +162,12 @@ class Endpoint {
     }
 
     generateKey() {
-        let keyParts = [];
+        const keyParts = [];
+
         for (let i = 0; i < 3; i++) {
             const index = Math.floor(Math.random() * 57);
-            keyParts.push(this._getTokenFor(Math.random()).slice(index, index + 8));
+
+            keyParts.push(getTokenFor(Math.random()).slice(index, index + 8));
         }
 
         return keyParts.join("-").toUpperCase();
@@ -218,7 +223,7 @@ class Endpoint {
     }
 
     async castVote({committeeId, candidateName}, token) {
-        const userId = sessions.find(s => s.token === token).userId;
+        const {userId} = sessions.find(s => s.token === token);
 
         if (await db.castVote(committeeId, candidateName, userId)) {
             for (const sub of subs.votes) {
@@ -232,4 +237,4 @@ class Endpoint {
     }
 }
 
-module.exports = Endpoint;
+module.exports = {Endpoint, verify};

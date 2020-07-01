@@ -19,7 +19,7 @@ const adapter = new FileAsync("db.json", {
     }
 });
 
-/*
+/* DB Structure:
 committees[order, name, visible, candidates[name, votes]]
 users[name, key]
 votes[userId, committeeId, isCast]
@@ -47,9 +47,7 @@ module.exports = {
     getUserVotes(userId) {
         const votes = db.get("votes").filter({userId}).value();
 
-        return db.get("committees").filter(committee => {
-            return committee.visible && votes.map(v => v.committeeId).includes(committee.id);
-        }).map(committee => {
+        return db.get("committees").filter(committee => committee.visible && votes.map(v => v.committeeId).includes(committee.id)).map(committee => {
             const response = (({id, name, order}) => ({id, name, order}))(committee);
 
             if (votes.find(v => v.committeeId === committee.id).isCast) {

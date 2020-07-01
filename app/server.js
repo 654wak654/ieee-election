@@ -2,7 +2,7 @@
 /* eslint-disable padding-line-between-statements */
 
 const WebSocket = require("ws");
-const Endpoint = require("./endpoint");
+const {Endpoint, verify} = require("./endpoint");
 
 const wss = new WebSocket.Server({
     host: "localhost",
@@ -67,7 +67,7 @@ wss.on("connection", ws => {
                 return;
             }
 
-            if (!endpoint._verify(message.token, message.type)) {
+            if (!verify(message.token, message.type)) {
                 ws.close(1003, "Invalid message token");
                 return;
             }
