@@ -21,6 +21,7 @@ window.app = () => ({
     userVotes: [],
     currentUserVote: null,
     selectedCandidateName: "",
+    firstTimeInHomePage: true,
 
     // Admin panel variables
     modalCommittee: null,
@@ -91,22 +92,25 @@ window.app = () => ({
         "home": t => {
             t.initTippy();
 
+            t.firstTimeInHomePage = true;
+
             // noinspection JSIgnoredPromiseFromCall
             t.subTo("userVotes", data => {
-                if (data.length === 0) {
-                    return;
-                }
-
                 const sortedData = [...data].sort((a, b) => a.order - b.order);
 
                 t.userVotes = sortedData;
                 const index = t.getCurrentUserVoteIndex();
-                t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
+
+                if (data.length > 0) {
+                    t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
+                }
 
                 if (t.modal && index === -1) {
                     t.modal = null;
 
                     t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
+                } else if (t.firstTimeInHomePage) {
+                    t.firstTimeInHomePage = false;
                 } else {
                     t.showNotification("Oy kullanabildiğin komiteler güncellendi", "info");
                 }
