@@ -7,7 +7,7 @@
             <div class="box is-marginless">
                 <div class="card">
                     <div class="card-content px-3">
-                        <p class="mb-3 is-size-4">Şuan oy verebileceğin bir komite yok gibi görünüyor. Bu sayfada bekleyebilirsin; komiteler güncellenince burada belirecekler.</p>
+                        <p class="mb-4 is-size-4">Şuan oy verebileceğin bir komite yok gibi görünüyor. Bu sayfada bekleyebilirsin; komiteler güncellenince burada belirecekler.</p>
                         <!--suppress HtmlUnknownTarget -->
                         <img src="undraw_a_moment_to_relax_bbpa.svg" alt="voting">
                     </div>
@@ -55,7 +55,7 @@
                     <div class="card-content px-3">
                         <template x-if="userVotes.find(v => v.id === currentUserVote).isCast">
                             <div>
-                                <p class="mb-3 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için zaten oyunu kullandın.`"></p>
+                                <p class="mb-4 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için zaten oyunu kullandın.`"></p>
                                 <!--suppress HtmlUnknownTarget -->
                                 <img src="undraw_voting_nvu7.svg" alt="voting">
                             </div>
