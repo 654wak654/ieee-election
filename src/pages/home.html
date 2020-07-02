@@ -20,7 +20,7 @@
                 <div class="field has-addons">
                     <a
                             class="button is-medium is-link is-outlined is-hidden-mobile"
-                            data-tippy-content="Önceki Komite"
+                            data-tippy-content="Önceki Kategori"
                             :disabled="currentUserVote === userVotes[0].id"
                             @click="previousUserVote()"
                     >
@@ -43,7 +43,7 @@
 
                     <a
                             class="button is-medium is-link is-outlined is-hidden-mobile"
-                            data-tippy-content="Sonraki Komite"
+                            data-tippy-content="Sonraki Kategori"
                             :disabled="currentUserVote === userVotes[userVotes.length - 1].id"
                             @click="nextUserVote()"
                     >

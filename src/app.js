@@ -11,7 +11,7 @@ window.app = () => ({
     loginError: 0,
     modal: null,
     modalIsLoading: false,
-    notification: {show: false, type: "is-danger"},
+    notification: {show: false},
     notificationTimeout: null,
 
     _page: null,
@@ -121,18 +121,18 @@ window.app = () => ({
             t.userVotes = sortedData;
             const index = t.getCurrentUserVoteIndex();
 
-            if (data.length > 0) {
-                t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
-            }
-
-            if (t.modal && index === -1) {
+            if ((t.modal || t.selectedCandidateName.length > 0) && index === -1) {
                 t.modal = null;
 
-                t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
+                t.showNotification("😵 Oy vermek üzere olduğun kategori kaldırıldı");
             } else if (t.firstTimeInHomePage) {
                 t.firstTimeInHomePage = false;
             } else {
-                t.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
+                t.showNotification("Oy kullanabildiğin kategoriler güncellendi", "is-info");
+            }
+
+            if (data.length > 0) {
+                t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
             }
         });
 
