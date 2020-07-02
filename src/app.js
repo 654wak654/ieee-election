@@ -6,10 +6,6 @@ import Tagsfield from "./tagsfield";
 // TODO: Mails to users
 // TODO: Auto reconnect (Refresh reconnect is also broken?)
 
-// TODO: Subs aren't updated?
-//  Votes aren't updated on commitee delete?
-//  userVotes aren't updated
-
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: 0,
@@ -65,7 +61,7 @@ window.app = () => ({
             const message = JSON.parse(event.data);
 
             if (message.topic && this._subs[message.topic]) {
-                this._subs[message.topic](message.data);
+                this._subs[message.topic](this, message.data);
             } else {
                 this._queue[message.id](message.data);
 
@@ -119,24 +115,24 @@ window.app = () => ({
 
         this.firstTimeInHomePage = true;
 
-        this.subTo("userVotes", data => {
-            const sortedData = [...data].sort((a, b) => a.order - b.order);
+        this.subTo("userVotes", (t, data) => {
+            const sortedData = data.sort((a, b) => a.order - b.order);
 
-            this.userVotes = sortedData;
-            const index = this.getCurrentUserVoteIndex();
+            t.userVotes = sortedData;
+            const index = t.getCurrentUserVoteIndex();
 
             if (data.length > 0) {
-                this.currentUserVote = sortedData[index < 0 ? 0 : index].id;
+                t.currentUserVote = sortedData[index < 0 ? 0 : index].id;
             }
 
-            if (this.modal && index === -1) {
-                this.modal = null;
+            if (t.modal && index === -1) {
+                t.modal = null;
 
-                this.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
-            } else if (this.firstTimeInHomePage) {
-                this.firstTimeInHomePage = false;
+                t.showNotification("😵 Oy vermek üzere olduğun komite kaldırıldı");
+            } else if (t.firstTimeInHomePage) {
+                t.firstTimeInHomePage = false;
             } else {
-                this.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
+                t.showNotification("Oy kullanabildiğin komiteler güncellendi", "is-info");
             }
         });
 
@@ -144,40 +140,40 @@ window.app = () => ({
     },
 
     initAdminPanel() {
-        this.subTo("committees", data => {
-            this.committees = [...data].sort((a, b) => a.order - b.order);
+        this.subTo("committees", (t, data) => {
+            t.committees = data.sort((a, b) => a.order - b.order);
 
-            if (this.modalCommittee !== null && this.modalCommittee.id) {
-                const index = this.committees.findIndex(c => c.id === this.modalCommittee.id);
+            if (t.modalCommittee !== null && t.modalCommittee.id) {
+                const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
 
                 if (index === -1) {
-                    this.modalCommittee = null;
+                    t.modalCommittee = null;
 
-                    this.showNotification("😵 Üzerinde çalıştığın komite silindi!");
+                    t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
                 } else {
-                    this.modalCommittee = this.committees[index];
+                    t.modalCommittee = t.committees[index];
                 }
             }
 
-            this.initTippy();
+            t.initTippy();
         });
 
-        this.subTo("users", data => {
-            if (this.modalUser !== null && this.modalUser.id) {
-                const index = data.findIndex(u => u.id === this.modalUser.id);
+        this.subTo("users", (t, data) => {
+            if (t.modalUser !== null && t.modalUser.id) {
+                const index = data.findIndex(u => u.id === t.modalUser.id);
 
                 if (index === -1) {
-                    this.modalUser = null;
+                    t.modalUser = null;
 
-                    this.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
+                    t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
                 } else {
-                    this.modalUser.name = data[index].name;
+                    t.modalUser.name = data[index].name;
                 }
             }
 
-            this.users = data;
+            t.users = data;
 
-            this.initTippy();
+            t.initTippy();
         });
 
         this.sendMessage("allVotes").then(votes => {
@@ -185,22 +181,22 @@ window.app = () => ({
 
             this.initTippy();
 
-            this.subTo("votes", data => {
-                const index = this.votes.findIndex(v => v.userId === data.vote.userId && v.committeeId === data.vote.committeeId);
+            this.subTo("votes", (t, data) => {
+                const index = t.votes.findIndex(v => v.userId === data.vote.userId && v.committeeId === data.vote.committeeId);
 
                 if (data.add && index === -1) {
-                    this.votes.push(data.vote);
+                    t.votes.push(data.vote);
                 }
 
                 if (data.remove && index !== -1) {
-                    this.votes.splice(index, 1);
+                    t.votes.splice(index, 1);
                 }
 
                 if (data.change && index !== -1) {
-                    this.votes[index].isCast = true;
+                    t.votes[index].isCast = true;
                 }
 
-                this.initTippy();
+                t.initTippy();
             });
         }).then();
     },
@@ -224,7 +220,7 @@ window.app = () => ({
     subTo(type, callback) {
         this._subs[type] = callback;
 
-        this.sendMessage(type).then(response => callback(response));
+        this.sendMessage(type).then(response => callback(this, response));
     },
 
     showModal(title, text, onAccept, acceptClass = "is-danger") {
@@ -342,6 +338,9 @@ window.app = () => ({
         });
 
         instances.forEach(i => i.reference.classList.add("has-tippy"));
+
+        // TODO: This is creating a LOT of unnecessary event handlers
+        //  Could keep a global list of instance and a single EH then use that
 
         document.querySelectorAll(".has-fixed-size-small,.has-fixed-size-big").forEach(div => {
             div.addEventListener("scroll", () => instances.forEach(i => i.hide()));
