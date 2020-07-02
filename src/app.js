@@ -206,7 +206,7 @@ window.app = () => ({
     },
 
     onDisconnect() {
-        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
 
         this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenile", "is-danger", 0, false);
     },
@@ -309,7 +309,7 @@ window.app = () => ({
             // This doesn't work, but the dc handler suggest a reload anyways
             location.reload();
         } finally {
-            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
         }
     },
 
