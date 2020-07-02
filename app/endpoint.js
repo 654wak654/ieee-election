@@ -134,8 +134,10 @@ class Endpoint {
     }
 
     propagateCommitteesAndUserVotes() {
+        const data = db.getCommittees();
+
         for (const sub of subs.committees) {
-            sub.send(JSON.stringify({topic: "committees", data: db.getCommittees()}));
+            sub.send(JSON.stringify({topic: "committees", data}));
         }
 
         this.propagateUserVotes();
@@ -150,8 +152,10 @@ class Endpoint {
     async upsertUser(user) {
         await db.upsertUser(user);
 
+        const data = db.getUsers();
+
         for (const sub of subs.users) {
-            sub.send(JSON.stringify({topic: "users", data: db.getUsers()}));
+            sub.send(JSON.stringify({topic: "users", data}));
         }
 
         return {};
@@ -160,8 +164,10 @@ class Endpoint {
     async deleteUser({id}) {
         await db.deleteUser(id);
 
+        const data = db.getUsers();
+
         for (const sub of subs.users) {
-            sub.send(JSON.stringify({topic: "users", data: db.getUsers()}));
+            sub.send(JSON.stringify({topic: "users", data}));
         }
 
         return {};
