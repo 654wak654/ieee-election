@@ -6,14 +6,11 @@ import Tagsfield from "./tagsfield";
 // TODO: Mails to users
 // TODO: Auto reconnect
 
-// TODO: Change notification emoji a bit (scissor one is fine look around for the others)?
-
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: 0,
     modal: null,
     modalIsLoading: false,
-    hideAllTippyInstances: hideAll, // This is a function
     notification: {show: false},
     _notificationTimeout: null,
 
@@ -382,6 +379,10 @@ window.app = () => ({
 
             this._allTippySingletons[key].singleton.setInstances(this._allTippySingletons[key].instances);
         }
+    },
+
+    hideAllTippyInstances() {
+        hideAll({duration: 0});
     },
 
     getCurrentUserVoteIndex() {
