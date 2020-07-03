@@ -432,6 +432,10 @@ window.app = () => ({
             new Tagsfield(document.querySelector(".tagsfield"), this);
 
             this.initTippy(true);
+
+            if (!committee.id) {
+                document.getElementById("committee-name").focus();
+            }
         });
     },
 
@@ -566,7 +570,13 @@ window.app = () => ({
             this.sendMessage("generateKey").then(key => this.modalUser.key = key);
         }
 
-        this.initTippy();
+        this.$nextTick(() => {
+            this.initTippy(true);
+
+            if (!user.id) {
+                document.getElementById("user-name").focus();
+            }
+        });
     },
 
     async saveUser() {
