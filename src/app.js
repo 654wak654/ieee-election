@@ -1,40 +1,44 @@
 import "alpinejs";
-import tippy from "tippy.js";
+import tippy, {createSingleton, hideAll} from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
 // TODO: Mails to users
-// TODO: Auto reconnect (Refresh reconnect is also broken?)
+// TODO: Auto reconnect
+
+// TODO: Change notification emoji a bit (scissor one is fine look around for the others)?
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
     loginError: 0,
     modal: null,
     modalIsLoading: false,
+    hideAllTippyInstances: hideAll, // This is a function
     notification: {show: false},
-    notificationTimeout: null,
+    _notificationTimeout: null,
 
     _page: null,
     _queue: {},
     _queueId: 1,
     _subs: {},
+    _allTippyInstances: [],
+    _allTippySingletons: {},
 
     // Ballot box variables
     userVotes: [],
     currentUserVote: null,
     selectedCandidateName: "",
-    firstTimeInHomePage: true,
+    _firstTimeInHomePage: true,
 
     // Admin panel variables
+    candidateDeleteError: false,
+    userSearch: "",
     modalCommittee: null,
     modalCommitteeCandidatesTemp: [],
     modalUser: null,
     committees: [],
     users: [],
     votes: [],
-
-    candidateDeleteError: false,
-    userSearch: "",
 
     init() {
         window.addEventListener("popstate", e => {
@@ -113,7 +117,7 @@ window.app = () => ({
     initHome() {
         this.initTippy();
 
-        this.firstTimeInHomePage = true;
+        this._firstTimeInHomePage = true;
 
         this.subTo("userVotes", (t, data) => {
             const sortedData = data.sort((a, b) => a.order - b.order);
@@ -125,8 +129,8 @@ window.app = () => ({
                 t.modal = null;
 
                 t.showNotification("😵 Oy vermek üzere olduğun kategori kaldırıldı");
-            } else if (t.firstTimeInHomePage) {
-                t.firstTimeInHomePage = false;
+            } else if (t._firstTimeInHomePage) {
+                t._firstTimeInHomePage = false;
             } else {
                 t.showNotification("Oy kullanabildiğin kategoriler güncellendi", "is-info");
             }
@@ -243,7 +247,7 @@ window.app = () => ({
         if (this.notification.show) {
             this.notification.show = false;
 
-            clearTimeout(this.notificationTimeout);
+            clearTimeout(this._notificationTimeout);
 
             setTimeout(() => this.showNotification(message, type, time, dismissible), 300);
 
@@ -253,7 +257,7 @@ window.app = () => ({
         this.notification = {show: true, message, type, dismissible};
 
         if (time > 0) {
-            this.notificationTimeout = setTimeout(() => this.notification.show = false, time);
+            this._notificationTimeout = setTimeout(() => this.notification.show = false, time);
         }
     },
 
@@ -314,6 +318,22 @@ window.app = () => ({
             this.$nextTick(() => this.initTippy(true));
         }
 
+        for (let i = this._allTippyInstances.length - 1; i >= 0; i--) {
+            const instance = this._allTippyInstances[i];
+
+            if (!document.body.contains(instance.reference)) {
+                const key = instance.reference.parentElement.dataset.tippySingleton;
+
+                if (key && this._allTippySingletons[key]) {
+                    this._allTippySingletons[key].singleton.destroy();
+                    delete this._allTippySingletons[key];
+                }
+
+                instance.destroy();
+                this._allTippyInstances.splice(i, 1);
+            }
+        }
+
         // noinspection JSUnusedGlobalSymbols
         const instances = tippy("[data-tippy-content]:not(.has-tippy)", {
             animation: "perspective",
@@ -337,14 +357,31 @@ window.app = () => ({
             }
         });
 
-        instances.forEach(i => i.reference.classList.add("has-tippy"));
+        this._allTippyInstances.push(...instances);
 
-        // TODO: This is creating a LOT of unnecessary event handlers
-        //  Could keep a global list of instance and a single EH then use that
+        for (const instance of instances) {
+            instance.reference.classList.add("has-tippy");
 
-        document.querySelectorAll(".has-fixed-size-small,.has-fixed-size-big").forEach(div => {
-            div.addEventListener("scroll", () => instances.forEach(i => i.hide()));
-        });
+            const key = instance.reference.parentElement.dataset.tippySingleton;
+
+            if (!key) {
+                continue;
+            }
+
+            if (!this._allTippySingletons[key]) {
+                this._allTippySingletons[key] = {
+                    singleton: createSingleton([], {
+                        moveTransition: "transform 0.2s ease-out",
+                        overrides: ["content", "hideOnClick", "animation"]
+                    }),
+                    instances: [instance]
+                };
+            } else {
+                this._allTippySingletons[key].instances.push(instance);
+            }
+
+            this._allTippySingletons[key].singleton.setInstances(this._allTippySingletons[key].instances);
+        }
     },
 
     getCurrentUserVoteIndex() {
@@ -394,7 +431,7 @@ window.app = () => ({
         this.$nextTick(() => {
             new Tagsfield(document.querySelector(".tagsfield"), this);
 
-            this.initTippy();
+            this.initTippy(true);
         });
     },
 

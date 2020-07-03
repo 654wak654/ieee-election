@@ -10,9 +10,9 @@
                         <span>Komite Listesi</span>
                     </p>
 
-                    <div class="has-fixed-size-big">
+                    <div class="has-fixed-size-big" @scroll="hideAllTippyInstances()">
                         <template x-for="(committee, index) in committees" :key="committee">
-                            <div class="panel-block px-0">
+                            <div class="panel-block px-0" :data-tippy-singleton="`committees_${index}`">
                                 <a
                                         class="panel-block width-100"
                                         data-tippy-content="Seçimi Düzenle"
@@ -67,9 +67,9 @@
                         <span>Kullanıcı Listesi</span>
                     </p>
 
-                    <div class="has-fixed-size-big">
-                        <template x-for="user in users" :key="user">
-                            <div class="panel-block px-0">
+                    <div class="has-fixed-size-big" @scroll="hideAllTippyInstances()">
+                        <template x-for="(user, index) in users" :key="user">
+                            <div class="panel-block px-0" :data-tippy-singleton="`users_${index}`">
                                 <a
                                         class="panel-block width-100"
                                         data-tippy-content="Kullanıcıyı Düzenle"
@@ -180,7 +180,7 @@
                     </div>
                 </div>
 
-                <div class="has-fixed-size-small">
+                <div class="has-fixed-size-small" @scroll="hideAllTippyInstances()">
                     <nav class="panel">
                         <template x-for="user in users" :key="user">
                             <div x-show="user.name.toLowerCase().includes(userSearch.toLowerCase())" class="panel-block px-0">
