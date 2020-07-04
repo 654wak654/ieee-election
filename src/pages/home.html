@@ -53,7 +53,7 @@
 
                 <div class="card">
                     <div class="card-content px-3">
-                        <template x-if="userVotes.find(v => v.id === currentUserVote).isCast">
+                        <template x-if="userVotes[getCurrentUserVoteIndex()].isCast">
                             <div>
                                 <p class="mb-4 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için zaten oyunu kullandın.`"></p>
                                 <!--suppress HtmlUnknownTarget -->
@@ -61,7 +61,7 @@
                             </div>
                         </template>
 
-                        <template x-if="userVotes.find(v => v.id === currentUserVote).candidateNames">
+                        <template x-if="!userVotes[getCurrentUserVoteIndex()].isCast">
                             <div class="buttons">
                                 <template x-for="candidateName in userVotes.find(v => v.id === currentUserVote).candidateNames">
                                     <button
@@ -78,7 +78,7 @@
 
                 <div class="is-flex has-content-justified-center-tablet">
                     <button
-                            x-show="userVotes.find(v => v.id === currentUserVote).candidateNames"
+                            x-show="!userVotes[getCurrentUserVoteIndex()].isCast"
                             class="button is-primary is-medium is-fullwidth-mobile mt-4"
                             :disabled="selectedCandidateName.length === 0"
                             @click="showVoteModal()"
