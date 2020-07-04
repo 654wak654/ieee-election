@@ -11,5 +11,5 @@ dist/
 # Node modules
 node_modules/
 
-# DB file
-db.json
+# DB
+db/

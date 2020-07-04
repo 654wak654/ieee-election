@@ -119,6 +119,8 @@ window.app = () => ({
         this.subTo("userVotes", (t, data) => {
             const sortedData = data.sort((a, b) => a.order - b.order);
 
+            const selfVote = JSON.stringify(sortedData.map(({isCast, ...x}) => x)) === JSON.stringify(t.userVotes.map(({isCast, ...x}) => x));
+
             t.userVotes = sortedData;
             const index = t.getCurrentUserVoteIndex();
 
@@ -128,7 +130,7 @@ window.app = () => ({
                 t.showNotification("😵 Oy vermek üzere olduğun kategori kaldırıldı");
             } else if (t._firstTimeInHomePage) {
                 t._firstTimeInHomePage = false;
-            } else {
+            } else if (!selfVote) {
                 t.showNotification("Oy kullanabildiğin kategoriler güncellendi", "is-info");
             }
 
@@ -422,7 +424,7 @@ window.app = () => ({
 
         this.showModal(
             "Oy Kullan",
-            `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" isimli adaya kullanacaksınız. Emin misiniz?`,
+            `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" olarak kullanacaksınız. Emin misiniz?`,
             () => this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName}),
             "is-success"
         );
