@@ -141,6 +141,8 @@ window.app = () => ({
     },
 
     initAdminPanel() {
+        this.$watch("modalCommittee", () => this.userSearch = "");
+
         this.subTo("committees", (t, data) => {
             t.committees = data.sort((a, b) => a.order - b.order);
 
