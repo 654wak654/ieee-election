@@ -369,7 +369,15 @@ window.app = () => ({
                 this._allTippySingletons[key] = {
                     singleton: createSingleton([], {
                         moveTransition: "transform 0.2s ease-out",
-                        overrides: ["content", "hideOnClick", "animation"]
+                        overrides: ["content", "hideOnClick", "animation", "onHidden"],
+                        onTrigger(instance) {
+                            if (!instance.props.hideOnClick) {
+                                instance.props.triggerTarget[1].addEventListener("click", () => {
+                                    // This creates a small twitch because setContent uses moveTransition
+                                    instance.setContent("Kopyalandı!");
+                                }, {once: true});
+                            }
+                        }
                     }),
                     instances: [instance]
                 };

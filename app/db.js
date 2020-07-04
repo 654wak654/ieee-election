@@ -20,8 +20,8 @@ const adapter = new FileAsync("db.json", {
 });
 
 /* DB Structure:
-committees[order, name, visible, candidates[name, votes]]
-users[name, key]
+committees[id, order, name, visible, candidates[name, votes]]
+users[id, name, key]
 votes[userId, committeeId, isCast]
 logs[timestamp, message]
 admins[username, password]
