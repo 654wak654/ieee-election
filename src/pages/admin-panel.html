@@ -262,22 +262,24 @@
 
                 <label class="label">Oy Kullanabildiği Komiteler</label>
                 <p class="help">Oy kullanabildiği komiteleri değiştirmek için komite listesine gidin.</p>
-                <table class="table is-fullwidth is-hoverable">
-                    <thead>
-                    <tr>
-                        <th>Komite</th>
-                        <th>Oy Kullanmış?</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <template x-for="committee in votableCommittees()" :key="committee">
+                <div class="box px-0 py-0 has-fixed-size-small mt-3">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
                         <tr>
-                            <td x-text="committee.name"></td>
-                            <td x-text="voteStatus(modalUser, committee.id) > 1 ? 'Evet' : 'Hayır'"></td>
+                            <th>Komite</th>
+                            <th>Oy Kullanmış?</th>
                         </tr>
-                    </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        <template x-for="committee in votableCommittees()" :key="committee">
+                            <tr>
+                                <td x-text="committee.name"></td>
+                                <td x-text="voteStatus(modalUser, committee.id) > 1 ? 'Evet' : 'Hayır'"></td>
+                            </tr>
+                        </template>
+                        </tbody>
+                    </table>
+                </div>
             </section>
             <footer class="modal-card-foot has-content-justified-center-tablet">
                 <button class="button is-primary is-medium is-fullwidth-mobile" :class="{'is-loading': modalIsLoading}" @click="saveUser()">
