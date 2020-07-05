@@ -209,7 +209,7 @@ window.app = () => ({
     onDisconnect() {
         sessionStorage.removeItem("token");
 
-        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenile", "is-danger", 0, false);
+        this.showNotification("✂️ Sunucuyla bağlantı kesildi! Devam edebilmek için lütfen sayfayı yenile", "is-danger", false);
     },
 
     sendMessage(type, data = {}) {
@@ -244,21 +244,21 @@ window.app = () => ({
         this.modalIsLoading = false;
     },
 
-    showNotification(message, type = "is-danger", time = 3300, dismissible = true) {
+    showNotification(message, type = "is-danger", dismissible = true) {
         if (this.notification.show) {
             this.notification.show = false;
 
             clearTimeout(this._notificationTimeout);
 
-            setTimeout(() => this.showNotification(message, type, time, dismissible), 300);
+            setTimeout(() => this.showNotification(message, type, dismissible), 300);
 
             return;
         }
 
         this.notification = {show: true, message, type, dismissible};
 
-        if (time > 0) {
-            this._notificationTimeout = setTimeout(() => this.notification.show = false, time);
+        if (dismissible) {
+            this._notificationTimeout = setTimeout(() => this.notification.show = false, 3300);
         }
     },
 
