@@ -426,9 +426,10 @@ window.app = () => ({
             "Oy Kullan",
             `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" olarak kullanacaksınız. Emin misiniz?`,
             async () => {
-                await this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName});
-
+                const candidateName = this.selectedCandidateName;
                 this.selectedCandidateName = "";
+
+                await this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName});
             },
             "is-success"
         );
