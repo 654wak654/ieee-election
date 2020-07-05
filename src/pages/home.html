@@ -55,7 +55,7 @@
                     <div class="card-content px-3">
                         <template x-if="userVotes[getCurrentUserVoteIndex()].isCast">
                             <div>
-                                <p class="mb-4 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için zaten oyunu kullandın.`"></p>
+                                <p class="mb-4 is-size-5" x-text="`${userVotes.find(v => v.id === currentUserVote).name} için oyunu kullandın.`"></p>
                                 <!--suppress HtmlUnknownTarget -->
                                 <img src="undraw_voting_nvu7.svg" alt="voting">
                             </div>
