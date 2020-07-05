@@ -3,8 +3,14 @@ import tippy, {createSingleton, hideAll} from "tippy.js";
 import {SHA3} from "sha3";
 import Tagsfield from "./tagsfield";
 
-// TODO: Mails to users
+// TODO: Mails to users:
+//  - Add email:string and emailSent:bool fields to users
+//  - Email field in user modal should have button at the right (similar to key field) to send e-mail (ask with modal if emailSent)
+//  - mails with sendgrid
+//  - make a lil dialog by logs and logout
+
 // TODO: Auto reconnect
+// TODO: Lil bit of validation for admin forms
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
@@ -374,11 +380,13 @@ window.app = () => ({
                     singleton: createSingleton([], {
                         moveTransition: "transform 0.2s ease-out",
                         overrides: ["content", "hideOnClick", "animation", "onHidden"],
-                        onTrigger(instance) {
-                            if (!instance.props.hideOnClick) {
-                                instance.props.triggerTarget[1].addEventListener("click", () => {
+                        onTrigger(singletonInstance) {
+                            // TODO: This needs the content change check for "user has voted!" tip on the delete button
+
+                            if (!singletonInstance.props.hideOnClick) {
+                                singletonInstance.props.triggerTarget[1].addEventListener("click", () => {
                                     // This creates a small twitch because setContent uses moveTransition
-                                    instance.setContent("Kopyalandı!");
+                                    singletonInstance.setContent("Kopyalandı!");
                                 }, {once: true});
                             }
                         }

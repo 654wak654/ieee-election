@@ -4,7 +4,7 @@
 const {SHA3} = require("sha3");
 const db = require("./db");
 
-// TODO: Logging (put in different db file)
+// TODO: Logging
 
 const sessions = [];
 const subs = {
@@ -129,6 +129,8 @@ class Endpoint {
         await db.deleteCommittee(id);
 
         this.propagateCommitteesAndUserVotes();
+
+        // TODO: This function should propagate the appropriate "votes" removals
 
         return {};
     }
