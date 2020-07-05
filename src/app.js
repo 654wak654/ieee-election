@@ -425,7 +425,11 @@ window.app = () => ({
         this.showModal(
             "Oy Kullan",
             `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" olarak kullanacaksınız. Emin misiniz?`,
-            () => this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName}),
+            async () => {
+                await this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName: this.selectedCandidateName});
+
+                this.selectedCandidateName = "";
+            },
             "is-success"
         );
     },
