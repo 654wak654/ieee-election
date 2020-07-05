@@ -222,10 +222,10 @@ window.app = () => ({
         });
     },
 
-    subTo(type, callback) {
-        this._subs[type] = callback;
+    subTo(channel, callback) {
+        this._subs[channel] = callback;
 
-        this.sendMessage(type).then(response => callback(this, response));
+        this.sendMessage(channel).then(response => callback(this, response));
     },
 
     showModal(title, text, onAccept, acceptClass = "is-danger") {
