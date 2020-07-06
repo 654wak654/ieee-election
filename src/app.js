@@ -163,6 +163,8 @@ window.app = () => ({
                     t.showNotification("😵 Üzerinde çalıştığın komite silindi!");
                 } else {
                     t.modalCommittee = t.committees[index];
+
+                    t.updateCandidates();
                 }
             }
 
