@@ -154,6 +154,14 @@ window.app = () => ({
         this.subTo("committees", (t, data) => {
             t.committees = data.sort((a, b) => a.order - b.order);
 
+            const ids = t.committees.map(c => c.id);
+
+            for (let i = t.votes.length - 1; i >= 0; i--) {
+                if (!ids.includes(t.votes[i].committeeId)) {
+                    t.votes.splice(i, 1);
+                }
+            }
+
             if (t.modalCommittee !== null && t.modalCommittee.id) {
                 const index = t.committees.findIndex(c => c.id === t.modalCommittee.id);
 

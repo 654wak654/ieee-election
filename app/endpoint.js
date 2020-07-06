@@ -130,8 +130,6 @@ class Endpoint {
 
         this.propagateCommitteesAndUserVotes();
 
-        // TODO: This function should propagate the appropriate "votes" removals
-
         return {};
     }
 
