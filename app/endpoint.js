@@ -4,8 +4,6 @@
 const {SHA3} = require("sha3");
 const db = require("./db");
 
-// TODO: Logging
-
 const sessions = [];
 const subs = {
     committees: [],
@@ -238,6 +236,8 @@ class Endpoint {
         const {userId} = sessions.find(s => s.token === token);
 
         if (await db.castVote(committeeId, candidateName, userId)) {
+            db.log(`Vote cast for ${candidateName} in ${committeeId}`);
+
             for (const sub of subs.votes) {
                 sub.send(JSON.stringify({topic: "votes", data: {change: true, vote: {committeeId, userId}}}));
             }
