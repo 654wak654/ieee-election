@@ -35,6 +35,12 @@ const db = {
 })();
 
 module.exports = {
+    log(message) {
+        console.log(message);
+
+        return db.logs.push({timestamp: new Date(), message}).write();
+    },
+
     getUser(key) {
         return db.users.find({key}).value();
     },
