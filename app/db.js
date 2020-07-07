@@ -2,6 +2,7 @@
 
 const fs = require("fs").promises;
 const FileAsync = require("lowdb/adapters/FileAsync");
+const got = require("got");
 const low = require("lowdb");
 const shortid = require("shortid");
 
@@ -21,7 +22,27 @@ const db = {
     admins: null
 };
 
+const postgrest = {
+    available: false,
+    jwt: null // TODO: Pull this from ENV
+};
+
 (async () => {
+    try {
+        const response = await got("http://localhost:5442/votes");
+
+        // noinspection JSUnresolvedVariable
+        if (response.statusCode === 200) {
+            postgrest.available = true;
+
+            console.log("PostgREST detected, will be used for redundancy");
+        } else {
+            console.log("No PostgREST detected");
+        }
+    } catch {
+        console.log("No PostgREST detected");
+    }
+
     try {
         await fs.access("./db");
     } catch {
@@ -111,6 +132,20 @@ module.exports = {
         if (db.votes.some({committeeId, userId, isCast: false}).value()) {
             await db.votes.find({committeeId, userId}).assign({isCast: true}).write();
             await db.committees.find({id: committeeId}).get("candidates").find({name: candidateName}).update("votes", v => v + 1).write();
+
+            if (postgrest.available) {
+                // noinspection JSCheckFunctionSignatures
+                await got.post("http://localhost:5442/votes", {
+                    headers: {
+                        Authorization: `Bearer ${postgrest.jwt}`
+                    },
+                    json: {
+                        committeeid: committeeId,
+                        candidatename: candidateName
+                    },
+                    responseType: "json"
+                });
+            }
 
             return true;
         }
