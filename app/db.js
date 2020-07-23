@@ -23,7 +23,6 @@ const db = {
 };
 
 const postgrest = {
-    available: false,
     jwt: null // TODO: Pull this from ENV
 };
 
@@ -32,9 +31,9 @@ const postgrest = {
         const response = await got("http://localhost:5442/votes");
 
         // noinspection JSUnresolvedVariable
-        if (response.statusCode === 200) {
-            postgrest.available = true;
+        postgrest.available = response.statusCode === 200;
 
+        if (postgrest.available) {
             console.log("PostgREST detected, will be used for redundancy");
         } else {
             console.log("No PostgREST detected");
