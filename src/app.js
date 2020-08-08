@@ -11,6 +11,7 @@ import Tagsfield from "./tagsfield";
 
 // TODO: Auto reconnect
 // TODO: Lil bit of validation for admin forms
+// TODO: Scrollable tables' headers shouldn't scroll
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
