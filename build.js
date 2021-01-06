@@ -15,7 +15,7 @@ const Bundler = require("parcel");
     }
 
     // Run parcel bundler
-    await new Bundler("./src/index.html", {
+    await new Bundler("./app/index.html", {
         production: true,
         contentHash: false,
         sourceMaps: false,
