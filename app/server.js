@@ -4,6 +4,8 @@
 const WebSocket = require("ws");
 const {Endpoint, verify} = require("./endpoint");
 
+// TODO: Add a .env file for config
+
 const wss = new WebSocket.Server({
     host: "localhost",
     port: 5452

@@ -14,6 +14,8 @@ logs[timestamp, message]
 admins[username, password]
 */
 
+// TODO: Get rid of lowdb, got and PostgREST. Keep everything in memory, commit it to redis for persistency
+
 const db = {
     committees: null,
     users: null,

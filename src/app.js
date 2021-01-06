@@ -6,12 +6,13 @@ import Tagsfield from "./tagsfield";
 // TODO: Mails to users:
 //  - Add email:string and emailSent:bool fields to users
 //  - Email field in user modal should have button at the right (similar to key field) to send e-mail (ask with modal if emailSent)
-//  - mails with sendgrid
+//  - mails with mailjet
 //  - make a lil dialog by logs and logout
 
 // TODO: Auto reconnect
 // TODO: Lil bit of validation for admin forms
 // TODO: Scrollable tables' headers shouldn't scroll
+// TODO: Simplify tooltip stuff
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
