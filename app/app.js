@@ -52,6 +52,7 @@ window.app = () => ({
             }
         });
 
+        // TODO: Select this based on http/https
         this.ws = new WebSocket(process.env.NODE_ENV !== "development" ? `wss://${location.host}` : "ws://localhost:5452");
 
         this.ws.addEventListener("open", () => {
@@ -127,6 +128,7 @@ window.app = () => ({
         this.subTo("userVotes", (t, data) => {
             const sortedData = data.sort((a, b) => a.order - b.order);
 
+            // eslint-disable-next-line no-unused-vars
             const selfVote = JSON.stringify(sortedData.map(({isCast, ...x}) => x)) === JSON.stringify(t.userVotes.map(({isCast, ...x}) => x));
 
             t.userVotes = sortedData;
@@ -156,10 +158,10 @@ window.app = () => ({
         this.subTo("committees", (t, data) => {
             t.committees = data.sort((a, b) => a.order - b.order);
 
-            const ids = t.committees.map(c => c.id);
+            const ids = new Set(t.committees.map(c => c.id));
 
             for (let i = t.votes.length - 1; i >= 0; i--) {
-                if (!ids.includes(t.votes[i].committeeId)) {
+                if (!ids.has(t.votes[i].committeeId)) {
                     t.votes.splice(i, 1);
                 }
             }
@@ -353,7 +355,6 @@ window.app = () => ({
             }
         }
 
-        // noinspection JSUnusedGlobalSymbols
         const instances = tippy("[data-tippy-content]:not(.has-tippy)", {
             animation: "perspective",
             onTrigger(instance) {
@@ -447,6 +448,7 @@ window.app = () => ({
             `"${this.userVotes.find(v => v.id === this.currentUserVote).name}" için oyunuzu "${this.selectedCandidateName}" olarak kullanacaksınız. Emin misiniz?`,
             async () => {
                 const candidateName = this.selectedCandidateName;
+
                 this.selectedCandidateName = "";
 
                 await this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName});

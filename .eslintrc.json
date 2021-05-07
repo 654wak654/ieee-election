@@ -28,6 +28,7 @@
         "quotes": ["error", "double"],
         "radix": ["error", "as-needed"],
         "sort-imports": "off",
-        "space-before-function-paren": ["warn", {"named": "never"}]
+        "space-before-function-paren": ["warn", {"named": "never"}],
+        "unicorn/numeric-separators-style": "off"
     }
 }

@@ -13,6 +13,8 @@
         [
             "minify",
             {
+                "builtIns": false,
+                "evaluate": false,
                 "mangle": false,
                 "removeConsole": true,
                 "removeDebugger": true
