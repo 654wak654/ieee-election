@@ -13,6 +13,7 @@
         [
             "minify",
             {
+                "mangle": false,
                 "removeConsole": true,
                 "removeDebugger": true
             }
