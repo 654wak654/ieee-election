@@ -1,3 +1,13 @@
+function validateTag(value, tagsValues) {
+    if (
+        value.length > 0 &&
+        value.length <= 50 &&
+        !tagsValues.includes(value)
+    ) {
+        return true;
+    }
+}
+
 class Tagsfield {
     constructor(el, alpineApp) {
         if (el.classList.contains("ready")) {
@@ -19,6 +29,7 @@ class Tagsfield {
             event.preventDefault();
             const text = event.clipboardData.getData("text/plain");
             const tmp = document.createElement("div");
+
             tmp.innerHTML = text;
             document.execCommand("insertHTML", false, tmp.textContent.trim());
         });
@@ -27,19 +38,10 @@ class Tagsfield {
         this.input.value.split(",").filter(v => v.length > 0).forEach(v => this.addTag(v));
     }
 
-    validateTag(value, tagsValues) {
-        if (
-            value.length > 0 &&
-            value.length <= 50 &&
-            tagsValues.indexOf(value) === -1
-        ) {
-            return true;
-        }
-    }
-
     removeTag(tag) {
         const values = this.input.value.split(",");
-        const index = Array.from(this.el.children).indexOf(tag);
+        const index = [...this.el.children].indexOf(tag);
+
         values.splice(index, 1);
         this.input.value = values.join(",");
         this.el.removeChild(tag);
@@ -62,6 +64,7 @@ class Tagsfield {
 
     addTag(value) {
         const tag = document.createElement("div");
+
         tag.className = "control";
         tag.innerHTML = `<div class="tags has-addons"><span class="tag is-link">${value}</span><a class="tag is-delete"></a></div>`;
         tag.querySelector(".is-delete").addEventListener("click", () => {
@@ -70,6 +73,7 @@ class Tagsfield {
             }
         });
         const inputs = this.el.children[this.el.children.length - 1];
+
         this.el.insertBefore(tag, inputs);
         this.input.dispatchEvent(new Event("change"));
     }
@@ -77,12 +81,12 @@ class Tagsfield {
     onKeyDown(event) {
         this.alpineApp.candidateDeleteError = false;
 
-        if (["Enter", ","].indexOf(event.key) >= 0) {
+        if (["Enter", ","].includes(event.key)) {
             event.preventDefault();
             const value = this.editable.textContent.trim();
             const tagsValues = this.input.value.split(",").filter(v => v.length > 0);
 
-            if (!this.validateTag(value, tagsValues)) {
+            if (!validateTag(value, tagsValues)) {
                 return;
             }
 
