@@ -18,7 +18,12 @@ const db = {
     logs: [],
     admins: []
 };
-const redis = new Redis();
+const redis = new Redis({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
+    db: process.env.REDIS_DB
+});
 
 // Pushes item both into mem and redis
 async function push(list, item) {

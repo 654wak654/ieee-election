@@ -4,8 +4,8 @@ import WebSocket from "ws";
 import { Endpoint, verify } from "./endpoint.js";
 
 const wss = new WebSocket.Server({
-    host: process.env.HOST,
-    port: process.env.PORT
+    host: process.env.WS_HOST,
+    port: process.env.WS_PORT
 });
 
 wss.on("connection", ws => {
