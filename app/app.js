@@ -1,6 +1,6 @@
 import "alpinejs";
-import tippy, {createSingleton, hideAll} from "tippy.js";
-import {SHA3} from "sha3";
+import tippy, { createSingleton, hideAll } from "tippy.js";
+import { SHA3 } from "sha3";
 import Tagsfield from "./tagsfield";
 
 // TODO: Mails to users:
@@ -19,7 +19,7 @@ window.app = () => ({
     loginError: 0,
     modal: null,
     modalIsLoading: false,
-    notification: {show: false},
+    notification: { show: false },
     _notificationTimeout: null,
 
     _page: null,
@@ -52,7 +52,6 @@ window.app = () => ({
             }
         });
 
-        // TODO: Select this based on http/https
         this.ws = new WebSocket(process.env.NODE_ENV !== "development" ? `wss://${location.host}` : "ws://localhost:5452");
 
         this.ws.addEventListener("open", () => {
@@ -129,7 +128,7 @@ window.app = () => ({
             const sortedData = data.sort((a, b) => a.order - b.order);
 
             // eslint-disable-next-line no-unused-vars
-            const selfVote = JSON.stringify(sortedData.map(({isCast, ...x}) => x)) === JSON.stringify(t.userVotes.map(({isCast, ...x}) => x));
+            const selfVote = JSON.stringify(sortedData.map(({ isCast, ...x }) => x)) === JSON.stringify(t.userVotes.map(({ isCast, ...x }) => x));
 
             t.userVotes = sortedData;
             const index = t.getCurrentUserVoteIndex();
@@ -158,10 +157,10 @@ window.app = () => ({
         this.subTo("committees", (t, data) => {
             t.committees = data.sort((a, b) => a.order - b.order);
 
-            const ids = new Set(t.committees.map(c => c.id));
+            const ids = t.committees.map(c => c.id);
 
             for (let i = t.votes.length - 1; i >= 0; i--) {
-                if (!ids.has(t.votes[i].committeeId)) {
+                if (!ids.includes(t.votes[i].committeeId)) {
                     t.votes.splice(i, 1);
                 }
             }
@@ -234,7 +233,7 @@ window.app = () => ({
 
     sendMessage(type, data = {}) {
         return new Promise(resolve => {
-            this.ws.send(JSON.stringify({id: this._queueId, token: this.token, type, data}));
+            this.ws.send(JSON.stringify({ id: this._queueId, token: this.token, type, data }));
 
             this._queue[this._queueId] = resolve;
 
@@ -249,7 +248,7 @@ window.app = () => ({
     },
 
     showModal(title, text, onAccept, acceptClass = "is-danger") {
-        this.modal = {title, text, onAccept, acceptClass};
+        this.modal = { title, text, onAccept, acceptClass };
     },
 
     async onModalAccept() {
@@ -275,7 +274,7 @@ window.app = () => ({
             return;
         }
 
-        this.notification = {show: true, message, type, dismissible};
+        this.notification = { show: true, message, type, dismissible };
 
         if (dismissible) {
             this._notificationTimeout = setTimeout(() => this.notification.show = false, 3300);
@@ -288,7 +287,7 @@ window.app = () => ({
         }
 
         this.loginError = 1;
-        const {ok, token} = await this.sendMessage("auth", {key: this.$refs.key.value});
+        const { ok, token } = await this.sendMessage("auth", { key: this.$refs.key.value });
 
         if (ok) {
             this.token = token;
@@ -308,7 +307,7 @@ window.app = () => ({
 
         hash.update(this.$refs.password.value);
 
-        const {ok, token} = await this.sendMessage("adminAuth", {
+        const { ok, token } = await this.sendMessage("adminAuth", {
             username: this.$refs.username.value,
             password: hash.digest("hex")
         });
@@ -367,7 +366,7 @@ window.app = () => ({
                 if (!instance.props.hideOnClick) {
                     instance.reference.addEventListener("click", () => {
                         instance.setContent("Kopyalandı!");
-                    }, {once: true});
+                    }, { once: true });
                 }
             },
             onHidden(instance) {
@@ -400,7 +399,7 @@ window.app = () => ({
                                 singletonInstance.props.triggerTarget[1].addEventListener("click", () => {
                                     // This creates a small twitch because setContent uses moveTransition
                                     singletonInstance.setContent("Kopyalandı!");
-                                }, {once: true});
+                                }, { once: true });
                             }
                         }
                     }),
@@ -415,7 +414,7 @@ window.app = () => ({
     },
 
     hideAllTippyInstances() {
-        hideAll({duration: 0});
+        hideAll({ duration: 0 });
     },
 
     getCurrentUserVoteIndex() {
@@ -451,7 +450,7 @@ window.app = () => ({
 
                 this.selectedCandidateName = "";
 
-                await this.sendMessage("castVote", {committeeId: this.currentUserVote, candidateName});
+                await this.sendMessage("castVote", { committeeId: this.currentUserVote, candidateName });
             },
             "is-success"
         );
@@ -599,7 +598,7 @@ window.app = () => ({
         this.showModal(
             "Komiteyi Sil",
             `"${committee.name}" isimli komiteyi silmek istediğinize emin misiniz?`,
-            () => this.sendMessage("deleteCommittee", {id: committee.id})
+            () => this.sendMessage("deleteCommittee", { id: committee.id })
         );
     },
 
@@ -643,7 +642,7 @@ window.app = () => ({
         this.showModal(
             "Kullanıcıyı Sil",
             `"${user.name}" isimli kullanıcıyı silmek istediğinize emin misiniz?`,
-            () => this.sendMessage("deleteUser", {id: user.id})
+            () => this.sendMessage("deleteUser", { id: user.id })
         );
     },
 
@@ -673,7 +672,7 @@ window.app = () => ({
 
     toggleVote(user) {
         const current = this.voteStatus(user);
-        const vote = {userId: user.id, committeeId: this.modalCommittee.id, isCast: false};
+        const vote = { userId: user.id, committeeId: this.modalCommittee.id, isCast: false };
 
         if (current === 0) {
             this.votes.push(vote);

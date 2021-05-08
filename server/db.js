@@ -1,10 +1,7 @@
-/* eslint-env node */
+/* eslint-disable no-console */
 
-const fs = require("fs").promises;
-const FileAsync = require("lowdb/adapters/FileAsync");
-const got = require("got");
-const low = require("lowdb");
-const shortid = require("shortid");
+import Redis from "ioredis";
+import { nanoid } from "nanoid";
 
 /* DB Structure:
 committees[id, order, name, visible, candidates[name, votes]]
@@ -14,143 +11,149 @@ logs[timestamp, message]
 admins[username, password]
 */
 
-// TODO: Get rid of lowdb, got and PostgREST. Keep everything in memory, commit it to redis for persistency
-
 const db = {
-    committees: null,
-    users: null,
-    votes: null,
-    logs: null,
-    admins: null
+    committees: [],
+    users: [],
+    votes: [],
+    logs: [],
+    admins: []
 };
+const redis = new Redis();
 
-const postgrest = {
-    jwt: null // TODO: Pull this from ENV
-};
+// Pushes item both into mem and redis
+async function push(list, item) {
+    db[list].push(item);
 
+    await redis.rpush(list, JSON.stringify(item));
+}
+
+// Updates item both in mem and redis
+async function set(list, index, item) {
+    db[list][index] = item;
+
+    await redis.lset(list, index, JSON.stringify(item));
+}
+
+// Overrides entire list in redis
+async function update(list, lambda) {
+    // Apply filter and update db
+    db[list] = db[list].filter(x => lambda(x));
+
+    // Empty redis list
+    await redis.ltrim(list, 1, 0);
+
+    // Push everything to redis back in a batch
+    await redis.multi(db[list].map(item => ["rpush", list, JSON.stringify(item)])).exec();
+}
+
+// Fill values from redis
 (async () => {
-    try {
-        const response = await got("http://localhost:5442/votes");
-
-        // noinspection JSUnresolvedVariable
-        postgrest.available = response.statusCode === 200;
-
-        if (postgrest.available) {
-            console.log("PostgREST detected, will be used for redundancy");
-        } else {
-            console.log("No PostgREST detected");
-        }
-    } catch {
-        console.log("No PostgREST detected");
-    }
-
-    try {
-        await fs.access("./db");
-    } catch {
-        await fs.mkdir("./db");
-    }
-
     for (const key in db) {
-        const adapter = new FileAsync(`./db/${key}.json`, {defaultValue: []});
-        db[key] = await low(adapter);
+        if (Object.prototype.hasOwnProperty.call(db, key)) {
+            const list = await redis.lrange(key, 0, -1);
+
+            console.log(`Read ${list.length} items for db.${key}`);
+
+            db[key] = list.map(x => JSON.parse(x));
+        }
     }
 })();
 
-module.exports = {
-    log(message) {
-        console.log(message);
+export async function log(message) {
+    console.log(message);
 
-        return db.logs.push({timestamp: new Date(), message}).write();
-    },
+    await push("logs", { timestamp: new Date(), message });
+}
 
-    getUser(key) {
-        return db.users.find({key}).value();
-    },
+export function getUser(key) {
+    return db.users.find(user => user.key === key);
+}
 
-    hasAdmin(username, password) {
-        return db.admins.some({username, password}).value();
-    },
+export function hasAdmin(username, password) {
+    return db.admins.some(admin => admin.username === username && admin.password === password);
+}
 
-    getUserVotes(userId) {
-        const votes = db.votes.filter({userId}).value();
+export function getUserVotes(userId) {
+    const votes = db.votes.filter(vote => vote.userId === userId);
 
-        return db.committees.filter(committee => committee.visible && votes.map(v => v.committeeId).includes(committee.id)).map(committee => {
-            const response = (({id, name, order}) => ({id, name, order}))(committee);
-            response.isCast = votes.find(v => v.committeeId === committee.id).isCast;
-            response.candidateNames = committee.candidates.map(candidate => candidate.name);
+    return db.committees.filter(committee => committee.visible && votes.some(vote => vote.committeeId === committee.id)).map(committee => {
+        const response = (({ id, name, order }) => ({ id, name, order }))(committee);
 
-            return response;
-        }).value();
-    },
+        response.isCast = votes.find(vote => vote.committeeId === committee.id).isCast;
+        response.candidateNames = committee.candidates.map(candidate => candidate.name);
 
-    getCommittees() {
-        return db.committees.value();
-    },
+        return response;
+    });
+}
 
-    upsertCommittee(committee) {
-        if (committee.id) {
-            return db.committees.find({id: committee.id}).assign(committee).write();
-        } else {
-            return db.committees.push({id: shortid.generate(), ...committee}).write();
-        }
-    },
+export function getCommittees() {
+    return db.committees;
+}
 
-    async deleteCommittee(id) {
-        await db.votes.remove({committeeId: id}).write();
-        await db.committees.remove({id}).write();
-    },
+export async function upsertCommittee(committee) {
+    if (committee.id) {
+        const index = db.committees.findIndex(c => c.id === committee.id);
 
-    getUsers() {
-        return db.users.value();
-    },
+        await set("committees", index, committee);
+    } else {
+        await push("committees", { id: nanoid(), ...committee });
+    }
+}
 
-    upsertUser(user) {
-        if (user.id) {
-            return db.users.find({id: user.id}).assign(user).write();
-        } else {
-            return db.users.push({id: shortid.generate(), ...user}).write();
-        }
-    },
+export async function deleteCommittee(id) {
+    await update("votes", vote => vote.committeeId !== id);
+    await update("committees", committee => committee.id !== id);
+}
 
-    async deleteUser(id) {
-        await db.votes.remove({userId: id}).write();
-        await db.users.remove({id}).write();
-    },
+export function getUsers() {
+    return db.users;
+}
 
-    getVotes() {
-        return db.votes.value();
-    },
+export async function upsertUser(user) {
+    if (user.id) {
+        const index = db.users.findIndex(u => u.id === user.id);
 
-    addVote(vote) {
-        return db.votes.push(vote).write();
-    },
+        await set("users", index, user);
+    } else {
+        await push("users", { id: nanoid(), ...user });
+    }
+}
 
-    removeVote(vote) {
-        return db.votes.remove(vote).write();
-    },
+export async function deleteUser(id) {
+    await update("votes", vote => vote.userId !== id);
+    await update("users", user => user.id !== id);
+}
 
-    async castVote(committeeId, candidateName, userId) {
-        if (db.votes.some({committeeId, userId, isCast: false}).value()) {
-            await db.votes.find({committeeId, userId}).assign({isCast: true}).write();
-            await db.committees.find({id: committeeId}).get("candidates").find({name: candidateName}).update("votes", v => v + 1).write();
+export function getVotes() {
+    return db.votes;
+}
 
-            if (postgrest.available) {
-                // noinspection JSCheckFunctionSignatures
-                await got.post("http://localhost:5442/votes", {
-                    headers: {
-                        Authorization: `Bearer ${postgrest.jwt}`
-                    },
-                    json: {
-                        committeeid: committeeId,
-                        candidatename: candidateName
-                    },
-                    responseType: "json"
-                });
-            }
+export async function addVote(vote) {
+    await push("votes", vote);
+}
 
-            return true;
-        }
+export async function removeVote(vote) {
+    await update("votes", v => JSON.stringify(v) !== JSON.stringify(vote));
+}
 
+export async function castVote(committeeId, candidateName, userId) {
+    const voteIndex = db.votes.findIndex(vote => vote.committeeId === committeeId && vote.userId === userId);
+
+    if (voteIndex === -1 || db.votes[voteIndex].isCast) {
         return false;
     }
-};
+
+    // Mark vote as having been cast
+    db.votes[voteIndex].isCast = true;
+    await redis.lset("votes", voteIndex, JSON.stringify(db.votes[voteIndex]));
+
+    const committeeIndex = db.committees.find(committee => committee.id === committeeId);
+
+    // Add a vote to candidate in committee
+    db.committees[committeeIndex].candidates = db.committees[committeeIndex].candidates.map(candidate => (
+        { name: candidate.name, votes: candidate.votes + (candidate.name === candidateName ? 1 : 0) }
+    ));
+    await redis.lset("committees", committeeIndex, JSON.stringify(db.committees[committeeIndex]));
+
+    return true;
+}

@@ -1,14 +1,11 @@
-/* eslint-env node */
 /* eslint-disable padding-line-between-statements */
 
-const WebSocket = require("ws");
-const {Endpoint, verify} = require("./endpoint");
-
-// TODO: Add a .env file for config
+import WebSocket from "ws";
+import { Endpoint, verify } from "./endpoint.js";
 
 const wss = new WebSocket.Server({
-    host: "localhost",
-    port: 5452
+    host: process.env.HOST,
+    port: process.env.PORT
 });
 
 wss.on("connection", ws => {
@@ -78,7 +75,7 @@ wss.on("connection", ws => {
         const response = await endpoint[message.type](message.data, message.token);
 
         if (response) {
-            ws.send(JSON.stringify({id: message.id, data: response}));
+            ws.send(JSON.stringify({ id: message.id, data: response }));
         }
     });
 });

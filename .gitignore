@@ -1,15 +1,11 @@
 # Parcel cache
 .parcel-cache/
 
-# IntelliJ IDEA and VS Code configs
+# IntelliJ IDEA configs
 .idea/
-.vscode/
 
 # Build output
 dist/
 
 # Node modules
 node_modules/
-
-# DB
-db/

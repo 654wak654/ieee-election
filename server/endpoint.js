@@ -1,8 +1,7 @@
-/* eslint-env node */
 /* eslint-disable class-methods-use-this */
 
-const {SHA3} = require("sha3");
-const db = require("./db");
+import { SHA3 } from "sha3";
+import * as db from "./db.js";
 
 const sessions = [];
 const subs = {
@@ -54,7 +53,7 @@ class Endpoint {
         }
     }
 
-    auth({key}) {
+    auth({ key }) {
         const user = db.getUser(key);
 
         if (user) {
@@ -67,23 +66,23 @@ class Endpoint {
                 sessions.splice(index, 1);
             }
 
-            sessions.push({token, admin: false, userId: user.id});
+            sessions.push({ token, admin: false, userId: user.id });
 
-            return {ok: true, token};
+            return { ok: true, token };
         } else {
-            return {ok: false};
+            return { ok: false };
         }
     }
 
-    adminAuth({username, password}) {
+    adminAuth({ username, password }) {
         if (db.hasAdmin(username, password)) {
             const token = getTokenFor(password);
 
-            sessions.push({token, admin: true});
+            sessions.push({ token, admin: true });
 
-            return {ok: true, token};
+            return { ok: true, token };
         } else {
-            return {ok: false};
+            return { ok: false };
         }
     }
 
@@ -96,7 +95,7 @@ class Endpoint {
     }
 
     userVotes(_, token) {
-        const {userId} = sessions.find(s => s.token === token);
+        const { userId } = sessions.find(s => s.token === token);
 
         const index = subs.userVotes.findIndex(vote => vote.userId === userId);
 
@@ -104,7 +103,7 @@ class Endpoint {
             subs.userVotes.splice(index, 1);
         }
 
-        subs.userVotes.push({sub: this.ws, userId, last: ""});
+        subs.userVotes.push({ sub: this.ws, userId, last: "" });
 
         return db.getUserVotes(userId);
     }
@@ -123,7 +122,7 @@ class Endpoint {
         return {};
     }
 
-    async deleteCommittee({id}) {
+    async deleteCommittee({ id }) {
         await db.deleteCommittee(id);
 
         this.propagateCommitteesAndUserVotes();
@@ -135,7 +134,7 @@ class Endpoint {
         const data = db.getCommittees();
 
         for (const sub of subs.committees) {
-            sub.send(JSON.stringify({topic: "committees", data}));
+            sub.send(JSON.stringify({ topic: "committees", data }));
         }
 
         this.propagateUserVotes();
@@ -153,19 +152,19 @@ class Endpoint {
         const data = db.getUsers();
 
         for (const sub of subs.users) {
-            sub.send(JSON.stringify({topic: "users", data}));
+            sub.send(JSON.stringify({ topic: "users", data }));
         }
 
         return {};
     }
 
-    async deleteUser({id}) {
+    async deleteUser({ id }) {
         await db.deleteUser(id);
 
         const data = db.getUsers();
 
         for (const sub of subs.users) {
-            sub.send(JSON.stringify({topic: "users", data}));
+            sub.send(JSON.stringify({ topic: "users", data }));
         }
 
         return {};
@@ -186,7 +185,7 @@ class Endpoint {
     votes() {
         subs.votes.push(this.ws);
 
-        return {vote: {userId: null, committeeId: null}};
+        return { vote: { userId: null, committeeId: null } };
     }
 
     async addVote(vote) {
@@ -194,7 +193,7 @@ class Endpoint {
 
         for (const sub of subs.votes) {
             if (sub !== this.ws) {
-                sub.send(JSON.stringify({topic: "votes", data: {add: true, vote}}));
+                sub.send(JSON.stringify({ topic: "votes", data: { add: true, vote } }));
             }
         }
 
@@ -206,7 +205,7 @@ class Endpoint {
 
         for (const sub of subs.votes) {
             if (sub !== this.ws) {
-                sub.send(JSON.stringify({topic: "votes", data: {remove: true, vote}}));
+                sub.send(JSON.stringify({ topic: "votes", data: { remove: true, vote } }));
             }
         }
 
@@ -214,7 +213,7 @@ class Endpoint {
     }
 
     propagateUserVotes() {
-        for (const {sub, userId, last} of subs.userVotes) {
+        for (const { sub, userId, last } of subs.userVotes) {
             const data = db.getUserVotes(userId);
             const dataStringified = JSON.stringify(data);
 
@@ -224,7 +223,7 @@ class Endpoint {
 
             subs.userVotes.find(vote => vote.userId === userId).last = dataStringified;
 
-            sub.send(JSON.stringify({topic: "userVotes", data}));
+            sub.send(JSON.stringify({ topic: "userVotes", data }));
         }
     }
 
@@ -232,14 +231,15 @@ class Endpoint {
         return db.getVotes();
     }
 
-    async castVote({committeeId, candidateName}, token) {
-        const {userId} = sessions.find(s => s.token === token);
+    async castVote({ committeeId, candidateName }, token) {
+        const { userId } = sessions.find(s => s.token === token);
+        const castSuccess = await db.castVote(committeeId, candidateName, userId);
 
-        if (await db.castVote(committeeId, candidateName, userId)) {
-            db.log(`Vote cast for ${candidateName} in ${committeeId}`);
+        if (castSuccess) {
+            await db.log(`Vote cast for ${candidateName} in ${committeeId}`);
 
             for (const sub of subs.votes) {
-                sub.send(JSON.stringify({topic: "votes", data: {change: true, vote: {committeeId, userId}}}));
+                sub.send(JSON.stringify({ topic: "votes", data: { change: true, vote: { committeeId, userId } } }));
             }
 
             this.propagateCommitteesAndUserVotes();
@@ -249,4 +249,4 @@ class Endpoint {
     }
 }
 
-module.exports = {Endpoint, verify};
+export { Endpoint, verify };

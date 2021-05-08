@@ -20,15 +20,19 @@
         "no-new": "off",
         "no-param-reassign": ["warn", {"props": false}],
         "no-plusplus": "off",
+        "no-process-env": "off",
         "no-return-assign": "off",
         "no-underscore-dangle": "off",
         "no-use-before-define": ["error", {"functions": false}],
         "no-warning-comments": "warn",
-        "object-curly-spacing": ["warn", "never"],
+        "object-curly-spacing": ["error", "always", {"objectsInObjects": true}],
         "quotes": ["error", "double"],
         "radix": ["error", "as-needed"],
         "sort-imports": "off",
         "space-before-function-paren": ["warn", {"named": "never"}],
-        "unicorn/numeric-separators-style": "off"
+        "unicorn/catch-error-name": ["error", {"name": "e"}],
+        "unicorn/filename-case": ["error", {"case": "kebabCase"}],
+        "unicorn/numeric-separators-style": "off",
+        "unicorn/prefer-set-has": "off"
     }
 }

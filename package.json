@@ -4,10 +4,11 @@
     "description": "IEEE THKU Online Election App",
     "license": "UNLICENSED",
     "author": "654wak654",
+    "type": "module",
     "scripts": {
-        "build": "node build.js",
+        "build": "node clear-dist.js && parcel build app/index.html --no-source-maps --no-content-hash --public-url './'",
         "dev": "parcel app/index.html --port 5000",
-        "start": "node server/server.js",
+        "start": "node -r dotenv/config server/server.js",
         "lint": "eslint server && eslint app/app.js"
     },
     "browserslist": [
@@ -29,17 +30,16 @@
         "@parcel/packager-raw-url": "^2.0.0-beta.2",
         "@parcel/transformer-sass": "^2.0.0-beta.2",
         "@parcel/transformer-webmanifest": "^2.0.0-beta.2",
-        "@types/lowdb": "^1.0.9",
         "@types/ws": "^7.4.2",
         "babel-preset-minify": "^0.5.1",
+        "dotenv": "^7.0.0",
         "eslint": "^7.25.0",
         "eslint-config-es": "^3.28.29",
-        "got": "^11.8.2",
-        "lowdb": "^1.0.0",
+        "ioredis": "^4.27.2",
+        "nanoid": "^3.1.22",
         "parcel": "^2.0.0-beta.2",
         "posthtml-include": "^1.7.1",
         "sass": "^1.32.12",
-        "shortid": "^2.2.16",
         "ws": "^7.4.5"
     }
 }
