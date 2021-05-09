@@ -5,6 +5,7 @@ import Tagsfield from "./tagsfield";
 
 // TODO: Auto reconnect
 // TODO: Scrollable tables' headers shouldn't scroll
+// TODO: Login through e-mail with query param
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
