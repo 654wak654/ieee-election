@@ -32,6 +32,39 @@ function verify(token, type) {
     return sessions.some(session => session.token === token && adminMethods.includes(type) === session.admin);
 }
 
+function propagateCommitteesAndUserVotes() {
+    const data = db.getCommittees();
+
+    for (const sub of subs.committees) {
+        sub.send(JSON.stringify({ topic: "committees", data }));
+    }
+
+    propagateUserVotes();
+}
+
+function propagateUsers() {
+    const data = db.getUsers();
+
+    for (const sub of subs.users) {
+        sub.send(JSON.stringify({ topic: "users", data }));
+    }
+}
+
+function propagateUserVotes() {
+    for (const { sub, userId, last } of subs.userVotes) {
+        const data = db.getUserVotes(userId);
+        const dataStringified = JSON.stringify(data);
+
+        if (last === dataStringified) {
+            continue;
+        }
+
+        subs.userVotes.find(vote => vote.userId === userId).last = dataStringified;
+
+        sub.send(JSON.stringify({ topic: "userVotes", data }));
+    }
+}
+
 async function getMailUsage() {
     const res = await got("https://api.mailjet.com/v3/REST/statcounters", {
         username: process.env.MAILJET_API_KEY,
@@ -136,7 +169,7 @@ class Endpoint {
     async upsertCommittee(committee) {
         await db.upsertCommittee(committee);
 
-        this._propagateCommitteesAndUserVotes();
+        propagateCommitteesAndUserVotes();
 
         return {};
     }
@@ -144,19 +177,9 @@ class Endpoint {
     async deleteCommittee({ id }) {
         await db.deleteCommittee(id);
 
-        this._propagateCommitteesAndUserVotes();
+        propagateCommitteesAndUserVotes();
 
         return {};
-    }
-
-    _propagateCommitteesAndUserVotes() {
-        const data = db.getCommittees();
-
-        for (const sub of subs.committees) {
-            sub.send(JSON.stringify({ topic: "committees", data }));
-        }
-
-        this._propagateUserVotes();
     }
 
     users() {
@@ -168,7 +191,7 @@ class Endpoint {
     async upsertUser(user) {
         await db.upsertUser(user);
 
-        this._propagateUsers();
+        propagateUsers();
 
         return {};
     }
@@ -176,7 +199,7 @@ class Endpoint {
     async deleteUser({ id }) {
         await db.deleteUser(id);
 
-        this._propagateUsers();
+        propagateUsers();
 
         return {};
     }
@@ -197,7 +220,7 @@ class Endpoint {
         // Mark emailSent
         await db.upsertUser({ ...user, emailSent: true });
 
-        this._propagateUsers();
+        propagateUsers();
 
         // TODO: Actually send mail through mailjet
 
@@ -208,14 +231,6 @@ class Endpoint {
         }
 
         return {};
-    }
-
-    _propagateUsers() {
-        const data = db.getUsers();
-
-        for (const sub of subs.users) {
-            sub.send(JSON.stringify({ topic: "users", data }));
-        }
     }
 
     votes() {
@@ -233,7 +248,7 @@ class Endpoint {
             }
         }
 
-        this._propagateUserVotes();
+        propagateUserVotes();
     }
 
     async removeVote(vote) {
@@ -245,22 +260,7 @@ class Endpoint {
             }
         }
 
-        this._propagateUserVotes();
-    }
-
-    _propagateUserVotes() {
-        for (const { sub, userId, last } of subs.userVotes) {
-            const data = db.getUserVotes(userId);
-            const dataStringified = JSON.stringify(data);
-
-            if (last === dataStringified) {
-                continue;
-            }
-
-            subs.userVotes.find(vote => vote.userId === userId).last = dataStringified;
-
-            sub.send(JSON.stringify({ topic: "userVotes", data }));
-        }
+        propagateUserVotes();
     }
 
     allVotes() {
@@ -284,7 +284,7 @@ class Endpoint {
                 sub.send(JSON.stringify({ topic: "votes", data: { change: true, vote: { committeeId, userId } } }));
             }
 
-            this._propagateCommitteesAndUserVotes();
+            propagateCommitteesAndUserVotes();
         }
 
         return {};
