@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 
 import { SHA3 } from "sha3";
+import got from "got";
 import * as db from "./db.js";
 
 const sessions = [];
