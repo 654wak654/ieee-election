@@ -152,7 +152,7 @@ export async function castVote(committeeId, candidateName, userId) {
     db.votes[voteIndex].isCast = true;
     await redis.lset("votes", voteIndex, JSON.stringify(db.votes[voteIndex]));
 
-    const committeeIndex = db.committees.find(committee => committee.id === committeeId);
+    const committeeIndex = db.committees.findIndex(committee => committee.id === committeeId);
 
     // Add a vote to candidate in committee
     db.committees[committeeIndex].candidates = db.committees[committeeIndex].candidates.map(candidate => (
