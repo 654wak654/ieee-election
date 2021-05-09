@@ -29,7 +29,7 @@ let htmlTemplate = null;
     mailUsage = await getMailUsage();
 
     // Read it here once so we don't have to re-read it on every mail
-    htmlTemplate = await readFile("./mail-templates/key-mail.html", { encoding: "utf-8" });
+    htmlTemplate = await readFile("./server/mail-templates/key-mail.html", { encoding: "utf-8" });
 })();
 
 function getTokenFor(string) {
