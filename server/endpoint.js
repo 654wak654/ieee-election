@@ -8,13 +8,15 @@ const subs = {
     committees: [],
     users: [],
     votes: [],
-    userVotes: []
+    userVotes: [],
+    mailUsage: []
 };
 
 const adminMethods = [
     "committees", "upsertCommittee", "deleteCommittee",
     "users", "upsertUser", "deleteUser", "generateKey", "mailKeyToUser",
-    "votes", "addVote", "removeVote", "allVotes"
+    "votes", "addVote", "removeVote", "allVotes",
+    "mailUsage"
 ];
 
 function getTokenFor(string) {
@@ -38,7 +40,7 @@ class Endpoint {
     }
 
     _onDisconnect() {
-        for (const topic of [subs.committees, subs.users, subs.votes]) {
+        for (const topic of [subs.committees, subs.users, subs.votes, subs.mailUsage]) {
             const index = topic.indexOf(this.ws);
 
             if (index !== -1) {
@@ -182,6 +184,11 @@ class Endpoint {
 
         // TODO: Actually send mail through mailjet
 
+        for (const sub of subs.mailUsage) {
+            // TODO: Send actual amount instead of 6
+            sub.send(JSON.stringify({ topic: "mailUsage", data: 6 }));
+        }
+
         return {};
     }
 
@@ -240,6 +247,13 @@ class Endpoint {
 
     allVotes() {
         return db.getVotes();
+    }
+
+    mailUsage() {
+        subs.mailUsage.push(this.ws);
+
+        // TODO: Send actual amount instead of 5
+        return 5;
     }
 
     async castVote({ committeeId, candidateName }, token) {

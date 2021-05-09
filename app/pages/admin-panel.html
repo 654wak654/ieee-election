@@ -114,8 +114,8 @@
 
                 <!-- TODO: 'Show Logs' to the left of this -->
                 <div style="display: flex;" class="is-pulled-right ">
-                    <p class="has-text-dark" x-text="mailUsage"></p>
-                    <p style="margin: 0 5px;">·</p>
+                    <p class="has-text-dark" x-text="mailUsage" data-tippy-content="Günlük e-mail kullanım limiti"></p>
+                    <p style="margin: 0 5px;" x-show="mailUsage.length > 0">·</p>
                     <p @click="signOutTo('admin-login')" class="has-text-link is-clickable">Çıkış Yap</p>
                 </div>
             </div>

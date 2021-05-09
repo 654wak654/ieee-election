@@ -29,8 +29,7 @@ window.app = () => ({
     _firstTimeInHomePage: true,
 
     // Admin panel variables
-    // TODO: Update this with a subscription
-    mailUsage: "Mail kullanımı: (5/200)",
+    mailUsage: "",
     verifyError: new Set(),
     candidateDeleteError: false,
     userSearch: "",
@@ -149,6 +148,10 @@ window.app = () => ({
 
     initAdminPanel() {
         this.$watch("modalCommittee", () => this.userSearch = "");
+
+        this.subTo("mailUsage", (t, data) => {
+            t.mailUsage = `Mail kullanımı: ${data}/200`;
+        });
 
         this.subTo("committees", (t, data) => {
             t.committees = data.sort((a, b) => a.order - b.order);
