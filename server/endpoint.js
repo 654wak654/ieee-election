@@ -65,6 +65,36 @@ function propagateUserVotes() {
     }
 }
 
+async function sendKeyMail(user) {
+    // TODO: Go over mailjet API to perfect this call
+    await got.post("https://api.mailjet.com/v3.1/send", {
+        username: process.env.MAILJET_API_KEY,
+        password: process.env.MAILJET_SECRET_KEY,
+        responseType: "json",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        json: {
+            Messages: [
+                {
+                    From: {
+                        Email: "ieee.secim@mj.mcore.xyz",
+                        Name: "secim.ieeethku.com"
+                    },
+                    To: [
+                        {
+                            Email: user.email,
+                            Name: user.name
+                        }
+                    ],
+                    Subject: "IEEE THKÜ Seçim Anahtarı",
+                    HTMLPart: user.key
+                }
+            ]
+        }
+    });
+}
+
 async function getMailUsage() {
     const { body } = await got("https://api.mailjet.com/v3/REST/statcounters", {
         username: process.env.MAILJET_API_KEY,
@@ -222,7 +252,7 @@ class Endpoint {
 
         propagateUsers();
 
-        // TODO: Actually send mail through mailjet
+        await sendKeyMail(user);
 
         const data = await getMailUsage();
 
