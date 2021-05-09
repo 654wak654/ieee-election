@@ -78,9 +78,9 @@
                                 >
                                 </a>
                                 <a
-                                        class="button is-link"
+                                        class="button"
+                                        :class="{'is-link': !user.emailSent, 'is-success': user.emailSent}"
                                         data-tippy-content="Anahtarı Yolla"
-                                        data-tippy-hideOnClick="false"
                                         @click="mailKeyToUser(user)"
                                 >
                                     <span class="icon"><i class="material-icons">email</i></span>
@@ -88,7 +88,6 @@
                                 <a
                                         class="button is-link"
                                         data-tippy-content="Anahtarı Kopyala"
-                                        data-tippy-hideOnClick="false"
                                         @click="copyKeyToClipboard(user)"
                                 >
                                     <span class="icon"><i class="material-icons">content_copy</i></span>
@@ -114,6 +113,7 @@
                 </nav>
 
                 <!-- TODO: 'Show Logs' to the left of this -->
+                <!-- TODO: Show daily mail limit to the left of this -->
                 <p @click="signOutTo('admin-login')" class="is-pulled-right has-text-link is-clickable">Çıkış Yap</p>
             </div>
         </div>

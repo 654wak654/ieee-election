@@ -3,15 +3,8 @@ import tippy, { createSingleton, hideAll } from "tippy.js";
 import { SHA3 } from "sha3";
 import Tagsfield from "./tagsfield";
 
-// TODO: Mails to users:
-//  - Add email:string and emailSent:bool fields to users
-//  - Email field in user modal should have button at the right (similar to key field) to send e-mail (ask with modal if emailSent)
-//  - mails with mailjet
-//  - make a lil dialog by logs and logout
-
 // TODO: Auto reconnect
 // TODO: Scrollable tables' headers shouldn't scroll
-// TODO: Simplify tooltip stuff
 
 // noinspection JSUnusedGlobalSymbols
 window.app = () => ({
@@ -363,17 +356,6 @@ window.app = () => ({
                 if (content !== instance.props.content) {
                     instance.setContent(content);
                 }
-
-                if (!instance.props.hideOnClick) {
-                    instance.reference.addEventListener("click", () => {
-                        instance.setContent("Kopyalandı!");
-                    }, { once: true });
-                }
-            },
-            onHidden(instance) {
-                if (!instance.props.hideOnClick) {
-                    instance.setContent("Anahtarı Kopyala");
-                }
             }
         });
 
@@ -392,17 +374,7 @@ window.app = () => ({
                 this._allTippySingletons[key] = {
                     singleton: createSingleton([], {
                         moveTransition: "transform 0.2s ease-out",
-                        overrides: ["content", "hideOnClick", "animation", "onHidden"],
-                        onTrigger(singletonInstance) {
-                            // TODO: This needs the content change check for "user has voted!" tip on the delete button
-
-                            if (!singletonInstance.props.hideOnClick) {
-                                singletonInstance.props.triggerTarget[1].addEventListener("click", () => {
-                                    // This creates a small twitch because setContent uses moveTransition
-                                    singletonInstance.setContent("Kopyalandı!");
-                                }, { once: true });
-                            }
-                        }
+                        overrides: ["content", "hideOnClick", "animation", "onHidden"]
                     }),
                     instances: [instance]
                 };
@@ -656,11 +628,23 @@ window.app = () => ({
     },
 
     copyKeyToClipboard(user) {
+        this.showNotification(`"${user.name}" isimli kullanıcının anahtarı panoya kopyalandı`, "is-info");
+
         return navigator.clipboard.writeText(user.key);
     },
 
-    mailKeyToUser(user) {
-        // TODO: this
+    async mailKeyToUser(user, skipModal = false) {
+        if (!skipModal && user.emailSent) {
+            return this.showModal(
+                "Anahtar Zaten Yollanmış",
+                `"${user.name}" isimli kullanıcıya zaten anahtar yollanmış görünüyor. Tekrar mail yollamak istediğinize emin misiniz?`,
+                () => this.mailKeyToUser(user, true),
+                "is-link"
+            );
+        }
+
+        await this.sendMessage("mailKeyToUser", user);
+        this.showNotification(`"${user.name}" isimli kullanıcının anahtarı ${user.email} adresine yollandı`, "is-info");
     },
 
     deleteUser(user) {

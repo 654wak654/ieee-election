@@ -13,7 +13,7 @@ const subs = {
 
 const adminMethods = [
     "committees", "upsertCommittee", "deleteCommittee",
-    "users", "upsertUser", "deleteUser", "generateKey",
+    "users", "upsertUser", "deleteUser", "generateKey", "mailKeyToUser",
     "votes", "addVote", "removeVote", "allVotes"
 ];
 
@@ -117,7 +117,7 @@ class Endpoint {
     async upsertCommittee(committee) {
         await db.upsertCommittee(committee);
 
-        this.propagateCommitteesAndUserVotes();
+        this._propagateCommitteesAndUserVotes();
 
         return {};
     }
@@ -125,19 +125,19 @@ class Endpoint {
     async deleteCommittee({ id }) {
         await db.deleteCommittee(id);
 
-        this.propagateCommitteesAndUserVotes();
+        this._propagateCommitteesAndUserVotes();
 
         return {};
     }
 
-    propagateCommitteesAndUserVotes() {
+    _propagateCommitteesAndUserVotes() {
         const data = db.getCommittees();
 
         for (const sub of subs.committees) {
             sub.send(JSON.stringify({ topic: "committees", data }));
         }
 
-        this.propagateUserVotes();
+        this._propagateUserVotes();
     }
 
     users() {
@@ -149,11 +149,7 @@ class Endpoint {
     async upsertUser(user) {
         await db.upsertUser(user);
 
-        const data = db.getUsers();
-
-        for (const sub of subs.users) {
-            sub.send(JSON.stringify({ topic: "users", data }));
-        }
+        this._propagateUsers();
 
         return {};
     }
@@ -161,11 +157,7 @@ class Endpoint {
     async deleteUser({ id }) {
         await db.deleteUser(id);
 
-        const data = db.getUsers();
-
-        for (const sub of subs.users) {
-            sub.send(JSON.stringify({ topic: "users", data }));
-        }
+        this._propagateUsers();
 
         return {};
     }
@@ -180,6 +172,25 @@ class Endpoint {
         }
 
         return keyParts.join("-").toUpperCase();
+    }
+
+    async mailKeyToUser(user) {
+        // Mark emailSent
+        await db.upsertUser({ ...user, emailSent: true });
+
+        this._propagateUsers();
+
+        // TODO: Actually send mail through mailjet
+
+        return {};
+    }
+
+    _propagateUsers() {
+        const data = db.getUsers();
+
+        for (const sub of subs.users) {
+            sub.send(JSON.stringify({ topic: "users", data }));
+        }
     }
 
     votes() {
@@ -197,7 +208,7 @@ class Endpoint {
             }
         }
 
-        this.propagateUserVotes();
+        this._propagateUserVotes();
     }
 
     async removeVote(vote) {
@@ -209,10 +220,10 @@ class Endpoint {
             }
         }
 
-        this.propagateUserVotes();
+        this._propagateUserVotes();
     }
 
-    propagateUserVotes() {
+    _propagateUserVotes() {
         for (const { sub, userId, last } of subs.userVotes) {
             const data = db.getUserVotes(userId);
             const dataStringified = JSON.stringify(data);
@@ -242,7 +253,7 @@ class Endpoint {
                 sub.send(JSON.stringify({ topic: "votes", data: { change: true, vote: { committeeId, userId } } }));
             }
 
-            this.propagateCommitteesAndUserVotes();
+            this._propagateCommitteesAndUserVotes();
         }
 
         return {};
