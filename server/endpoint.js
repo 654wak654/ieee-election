@@ -20,6 +20,11 @@ const adminMethods = [
     "mailUsage"
 ];
 
+let mailUsage = 0;
+
+// Set initial count
+getMailUsage().then(_mailUsage => mailUsage = _mailUsage);
+
 function getTokenFor(string) {
     const hash = new SHA3(256);
 
@@ -65,12 +70,11 @@ function propagateUserVotes() {
     }
 }
 
-async function sendKeyMail(user) {
+function sendKeyMail(user) {
     // TODO: Go over mailjet API to perfect this call
-    await got.post("https://api.mailjet.com/v3.1/send", {
+    return got.post("https://api.mailjet.com/v3.1/send", {
         username: process.env.MAILJET_API_KEY,
         password: process.env.MAILJET_SECRET_KEY,
-        responseType: "json",
         headers: {
             "Content-Type": "application/json"
         },
@@ -256,8 +260,12 @@ class Endpoint {
 
         const data = await getMailUsage();
 
-        for (const sub of subs.mailUsage) {
-            sub.send(JSON.stringify({ topic: "mailUsage", data }));
+        if (data !== mailUsage) {
+            mailUsage = data;
+
+            for (const sub of subs.mailUsage) {
+                sub.send(JSON.stringify({ topic: "mailUsage", data }));
+            }
         }
 
         return {};
@@ -300,7 +308,7 @@ class Endpoint {
     mailUsage() {
         subs.mailUsage.push(this.ws);
 
-        return getMailUsage();
+        return mailUsage;
     }
 
     async castVote({ committeeId, candidateName }, token) {
