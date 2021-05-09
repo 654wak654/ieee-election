@@ -113,8 +113,11 @@
                 </nav>
 
                 <!-- TODO: 'Show Logs' to the left of this -->
-                <!-- TODO: Show daily mail limit to the left of this -->
-                <p @click="signOutTo('admin-login')" class="is-pulled-right has-text-link is-clickable">Çıkış Yap</p>
+                <div style="display: flex;" class="is-pulled-right ">
+                    <p class="has-text-dark" x-text="mailUsage"></p>
+                    <p style="margin: 0 5px;">·</p>
+                    <p @click="signOutTo('admin-login')" class="has-text-link is-clickable">Çıkış Yap</p>
+                </div>
             </div>
         </div>
     </div>

@@ -28,6 +28,8 @@ window.app = () => ({
     _firstTimeInHomePage: true,
 
     // Admin panel variables
+    // TODO: Update this with a subscription
+    mailUsage: "Mail kullanımı: (5/200)",
     verifyError: new Set(),
     candidateDeleteError: false,
     userSearch: "",
