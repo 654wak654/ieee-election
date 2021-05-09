@@ -66,19 +66,19 @@ function propagateUserVotes() {
 }
 
 async function getMailUsage() {
-    const res = await got("https://api.mailjet.com/v3/REST/statcounters", {
+    const { body } = await got("https://api.mailjet.com/v3/REST/statcounters", {
         username: process.env.MAILJET_API_KEY,
         password: process.env.MAILJET_SECRET_KEY,
+        responseType: "json",
         searchParams: {
             CounterSource: "APIKey",
             CounterResolution: "Day",
             CounterTiming: "Message",
             FromTS: new Date().toISOString()
-        },
-        responseType: "json"
+        }
     });
 
-    return res.body.Data[0].MessageSentCount;
+    return body.Data[0].MessageSentCount;
 }
 
 class Endpoint {
