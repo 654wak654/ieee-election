@@ -32,6 +32,22 @@ function verify(token, type) {
     return sessions.some(session => session.token === token && adminMethods.includes(type) === session.admin);
 }
 
+async function getMailUsage() {
+    const res = await got("https://api.mailjet.com/v3/REST/statcounters", {
+        username: process.env.MAILJET_API_KEY,
+        password: process.env.MAILJET_SECRET_KEY,
+        searchParams: {
+            CounterSource: "APIKey",
+            CounterResolution: "Day",
+            CounterTiming: "Message",
+            FromTS: new Date().toISOString()
+        },
+        responseType: "json"
+    });
+
+    return res.body.Data[0].MessageSentCount;
+}
+
 class Endpoint {
     constructor(ws) {
         this.ws = ws;
@@ -185,9 +201,10 @@ class Endpoint {
 
         // TODO: Actually send mail through mailjet
 
+        const data = await getMailUsage();
+
         for (const sub of subs.mailUsage) {
-            // TODO: Send actual amount instead of 6
-            sub.send(JSON.stringify({ topic: "mailUsage", data: 6 }));
+            sub.send(JSON.stringify({ topic: "mailUsage", data }));
         }
 
         return {};
@@ -253,8 +270,7 @@ class Endpoint {
     mailUsage() {
         subs.mailUsage.push(this.ws);
 
-        // TODO: Send actual amount instead of 5
-        return 5;
+        return getMailUsage();
     }
 
     async castVote({ committeeId, candidateName }, token) {
