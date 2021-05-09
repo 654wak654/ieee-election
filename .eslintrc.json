@@ -6,6 +6,7 @@
     "rules": {
         "array-bracket-spacing": ["warn", "never"],
         "capitalized-comments": "warn",
+        "dot-location": ["error", "property"],
         "func-style": ["error", "declaration"],
         "global-require": "off",
         "id-length": "off",

@@ -1,5 +1,6 @@
 /* eslint-disable class-methods-use-this */
 
+import { readFile } from "fs/promises";
 import { SHA3 } from "sha3";
 import got from "got";
 import * as db from "./db.js";
@@ -21,9 +22,15 @@ const adminMethods = [
 ];
 
 let mailUsage = 0;
+let htmlTemplate = null;
 
-// Set initial count
-getMailUsage().then(_mailUsage => mailUsage = _mailUsage);
+(async () => {
+    // Set initial count
+    mailUsage = await getMailUsage();
+
+    // Read it here once so we don't have to re-read it on every mail
+    htmlTemplate = await readFile("./mail-templates/key-mail.html", { encoding: "utf-8" });
+})();
 
 function getTokenFor(string) {
     const hash = new SHA3(256);
@@ -71,7 +78,11 @@ function propagateUserVotes() {
 }
 
 function sendKeyMail(user) {
-    // TODO: Go over mailjet API to perfect this call
+    const htmlMessage = htmlTemplate
+        .replace("$EMAIL_TITLE", process.env.EMAIL_SUBJECT)
+        .replace("$USER_NAME", user.name)
+        .replace("$USER_KEY", user.key);
+
     return got.post("https://api.mailjet.com/v3.1/send", {
         username: process.env.MAILJET_API_KEY,
         password: process.env.MAILJET_SECRET_KEY,
@@ -82,8 +93,8 @@ function sendKeyMail(user) {
             Messages: [
                 {
                     From: {
-                        Email: "ieee.secim@mj.mcore.xyz",
-                        Name: "secim.ieeethku.com"
+                        Email: process.env.EMAIL_SENDER_MAIL,
+                        Name: process.env.EMAIL_SENDER_NAME
                     },
                     To: [
                         {
@@ -92,7 +103,7 @@ function sendKeyMail(user) {
                         }
                     ],
                     Subject: "IEEE THKÜ Seçim Anahtarı",
-                    HTMLPart: user.key
+                    HTMLPart: htmlMessage
                 }
             ]
         }
