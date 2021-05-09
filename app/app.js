@@ -10,7 +10,6 @@ import Tagsfield from "./tagsfield";
 //  - make a lil dialog by logs and logout
 
 // TODO: Auto reconnect
-// TODO: Lil bit of validation for admin forms
 // TODO: Scrollable tables' headers shouldn't scroll
 // TODO: Simplify tooltip stuff
 
@@ -36,6 +35,7 @@ window.app = () => ({
     _firstTimeInHomePage: true,
 
     // Admin panel variables
+    verifyError: new Set(),
     candidateDeleteError: false,
     userSearch: "",
     modalCommittee: null,
@@ -192,8 +192,7 @@ window.app = () => ({
                     t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
                 } else {
                     t.modalUser.name = data[index].name;
-
-                    // TODO: Set e-mail here?
+                    t.modalUser.email = data[index].email;
                 }
             }
 
@@ -467,7 +466,7 @@ window.app = () => ({
     editCommittee(committee) {
         this.candidateDeleteError = false;
         this.modalCommitteeCandidatesTemp = [];
-        this.modalCommittee = committee;
+        this.modalCommittee = JSON.parse(JSON.stringify(committee));
 
         this.$nextTick(() => {
             new Tagsfield(document.querySelector(".tagsfield"), this);
@@ -494,9 +493,18 @@ window.app = () => ({
     },
 
     async saveCommittee() {
-        if (this.modalIsLoading) {
+        if (this.modalIsLoading || !this.verifyInputs("committee-name")) {
             return;
         }
+
+        if (this.modalCommitteeCandidatesTemp.length < 2) {
+            this.verifyError.add("committee-candidates");
+
+            return;
+        } else {
+            this.verifyError.delete("committee-candidates");
+        }
+
         this.modalIsLoading = true;
 
         this.modalCommittee.candidates = this.modalCommitteeCandidatesTemp;
@@ -605,7 +613,7 @@ window.app = () => ({
     },
 
     editUser(user) {
-        this.modalUser = user;
+        this.modalUser = JSON.parse(JSON.stringify(user));
 
         if (!user.id) {
             this.sendMessage("generateKey").then(key => this.modalUser.key = key);
@@ -620,8 +628,23 @@ window.app = () => ({
         });
     },
 
+    verifyInputs(...inputs) {
+        this.verifyError = new Set();
+
+        for (const input of inputs) {
+            const element = document.getElementById(input);
+            const regex = new RegExp(element.pattern, "u");
+
+            if (!regex.test(element.value)) {
+                this.verifyError.add(input);
+            }
+        }
+
+        return this.verifyError.size === 0;
+    },
+
     async saveUser() {
-        if (this.modalIsLoading) {
+        if (this.modalIsLoading || !this.verifyInputs("user-name", "user-email")) {
             return;
         }
         this.modalIsLoading = true;

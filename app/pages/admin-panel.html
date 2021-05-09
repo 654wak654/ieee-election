@@ -79,6 +79,14 @@
                                 </a>
                                 <a
                                         class="button is-link"
+                                        data-tippy-content="Anahtarı Yolla"
+                                        data-tippy-hideOnClick="false"
+                                        @click="mailKeyToUser(user)"
+                                >
+                                    <span class="icon"><i class="material-icons">email</i></span>
+                                </a>
+                                <a
+                                        class="button is-link"
                                         data-tippy-content="Anahtarı Kopyala"
                                         data-tippy-hideOnClick="false"
                                         @click="copyKeyToClipboard(user)"
@@ -97,7 +105,7 @@
                     <div class="panel-block panel-block-footer has-content-justified-center-tablet mt-2">
                         <button
                                 class="button is-primary is-medium is-fullwidth-mobile"
-                                @click="editUser({name: '', key: ''})"
+                                @click="editUser({name: '', key: '', email: '', emailSent: false})"
                         >
                             <span class="icon"><i class="material-icons">person_add</i></span>
                             <span>Yeni Kullanıcı Oluştur</span>
@@ -128,8 +136,17 @@
                 <div class="field">
                     <label for="committee-name" class="label">Komite İsmi</label>
                     <div class="control">
-                        <input id="committee-name" class="input" type="text" x-model="modalCommittee.name">
+                        <input
+                                id="committee-name"
+                                class="input"
+                                type="text"
+                                pattern="^(?!\s*$).+"
+                                @input="verifyError.delete('committee-name')"
+                                x-model="modalCommittee.name"
+                                :class="{'is-danger': verifyError.has('committee-name'), 'is-dark': !verifyError.has('committee-name')}"
+                        >
                     </div>
+                    <p x-show="verifyError.has('committee-name')" class="help is-danger">Komite ismi boş olamaz!</p>
                 </div>
 
                 <label class="label">Adaylar</label>
@@ -138,12 +155,14 @@
                         <input
                                 type="hidden"
                                 :value="modalCommittee.candidates.map(c => c.name).join(',')"
-                                @change="updateCandidates()"
+                                :class="{'is-danger': verifyError.has('committee-candidates'), 'is-dark': !verifyError.has('committee-candidates')}"
+                                @change="verifyError.delete('committee-candidates'); updateCandidates()"
                         >
                         <span class="input" contenteditable></span>
                     </div>
                 </div>
                 <p x-show="candidateDeleteError" class="help is-danger">Oy almış adayları silemezsiniz!</p>
+                <p x-show="verifyError.has('committee-candidates')" class="help is-danger">En az 2 aday eklenmesi gerek!</p>
 
                 <table class="table is-fullwidth is-hoverable">
                     <thead>
@@ -230,32 +249,35 @@
                 <div class="field">
                     <label for="user-name" class="label">Kullanıcı İsmi</label>
                     <div class="control">
-                        <input id="user-name" class="input" type="text" x-model="modalUser.name">
+                        <input
+                                id="user-name"
+                                class="input"
+                                type="text"
+                                pattern="^(?!\s*$).+"
+                                @input="verifyError.delete('user-name')"
+                                x-model="modalUser.name"
+                                :class="{'is-danger': verifyError.has('user-name'), 'is-dark': !verifyError.has('user-name')}"
+                        >
                     </div>
-                    <p class="help">Not: Kullanıcı ismi sadece arayüzde kolaylık sağlamak için. Kullanıcılara anahtar yollamak yeterli!</p>
+                    <p x-show="!verifyError.has('user-name')" class="help">Not: Kullanıcı ismi sadece arayüzde kolaylık sağlamak için. Kullanıcılara anahtar yollamak yeterli!</p>
+                    <p x-show="verifyError.has('user-name')" class="help is-danger">Kullanıcı ismi boş olamaz!</p>
                 </div>
 
-                <label for="user-email" class="label">Kullanıcı E-maili</label>
-                <div class="field has-addons">
-                    <div class="control is-expanded">
+                <div class="field">
+                    <label for="user-email" class="label">Kullanıcı E-maili</label>
+                    <div class="control">
                         <input
                                 id="user-email"
                                 type="email"
                                 class="input is-family-monospace"
-                                placeholder="Anahtar oluşturuluyor..."
+                                pattern="^\S+@\S+\.\S+$"
+                                @input="verifyError.delete('user-email')"
+                                placeholder="user@example.com"
                                 x-model="modalUser.email"
+                                :class="{'is-danger': verifyError.has('user-email'), 'is-dark': !verifyError.has('user-email')}"
                         >
                     </div>
-                    <div class="control">
-                        <a
-                                class="button is-link"
-                                data-tippy-content="Anahtarı Yolla"
-                                data-tippy-hideOnClick="false"
-                                @click="mailKeyToUser(modalUser)"
-                        >
-                            <span class="icon"><i class="material-icons">email</i></span>
-                        </a>
-                    </div>
+                    <p x-show="verifyError.has('user-email')" class="help is-danger">E-mail geçerli değil!</p>
                 </div>
 
                 <label class="label">Oy Kullanabildiği Komiteler</label>

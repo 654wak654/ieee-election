@@ -7,7 +7,7 @@
     "type": "module",
     "scripts": {
         "build": "node clear-dist.mjs && parcel build app/index.html --no-source-maps --no-content-hash --public-url './'",
-        "dev": "parcel app/index.html --port 5000",
+        "dev": "parcel app/index.html --port 5000 --no-cache",
         "start": "node -r dotenv/config server/server.js",
         "lint": "eslint server && eslint app/app.js"
     },

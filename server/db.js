@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 
 /* DB Structure:
 committees[id, order, name, visible, candidates[name, votes]]
-users[id, name, key]
+users[id, name, key, email, emailSent]
 votes[userId, committeeId, isCast]
 logs[timestamp, message]
 admins[username, password]
