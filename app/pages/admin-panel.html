@@ -232,30 +232,28 @@
                     <div class="control">
                         <input id="user-name" class="input" type="text" x-model="modalUser.name">
                     </div>
-                    <p class="help">Not: Kullanıcı ismi sadece arayüzde kolaylık sağlamak için. Kullanıcılara anahtar vermek yeterli!</p>
+                    <p class="help">Not: Kullanıcı ismi sadece arayüzde kolaylık sağlamak için. Kullanıcılara anahtar yollamak yeterli!</p>
                 </div>
 
-                <label for="user-key" class="label">Kullanıcı Anahtarı</label>
+                <label for="user-email" class="label">Kullanıcı E-maili</label>
                 <div class="field has-addons">
                     <div class="control is-expanded">
                         <input
-                                id="user-key"
-                                type="text"
+                                id="user-email"
+                                type="email"
                                 class="input is-family-monospace"
                                 placeholder="Anahtar oluşturuluyor..."
-                                x-model="modalUser.key"
-                                @click.self="$event.target.setSelectionRange(0, modalUser.key.length)"
-                                readonly
+                                x-model="modalUser.email"
                         >
                     </div>
                     <div class="control">
                         <a
                                 class="button is-link"
-                                data-tippy-content="Anahtarı Kopyala"
+                                data-tippy-content="Anahtarı Yolla"
                                 data-tippy-hideOnClick="false"
-                                @click="copyKeyToClipboard(modalUser)"
+                                @click="mailKeyToUser(modalUser)"
                         >
-                            <span class="icon"><i class="material-icons">content_copy</i></span>
+                            <span class="icon"><i class="material-icons">email</i></span>
                         </a>
                     </div>
                 </div>

@@ -192,6 +192,8 @@ window.app = () => ({
                     t.showNotification("😵 Üzerinde çalıştığın kullanıcı silindi!");
                 } else {
                     t.modalUser.name = data[index].name;
+
+                    // TODO: Set e-mail here?
                 }
             }
 
@@ -632,6 +634,10 @@ window.app = () => ({
 
     copyKeyToClipboard(user) {
         return navigator.clipboard.writeText(user.key);
+    },
+
+    mailKeyToUser(user) {
+        // TODO: this
     },
 
     deleteUser(user) {
