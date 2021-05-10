@@ -123,7 +123,7 @@ async function getMailUsage() {
         }
     });
 
-    return body.Data[0].MessageSentCount;
+    return body.Count === 0 ? 0 : body.Data[0].MessageSentCount;
 }
 
 class Endpoint {
