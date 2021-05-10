@@ -3,6 +3,7 @@
 dist
 node_modules
 .dockerignore
+.env
 .env.example
 .gitignore
 .eslintrc.json

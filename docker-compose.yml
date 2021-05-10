@@ -10,6 +10,7 @@ services:
         restart: unless-stopped
         volumes:
             - web-files:/usr/src/app/dist
+            - $PWD/.env:/usr/src/app/.env
         depends_on:
             - redis
 
