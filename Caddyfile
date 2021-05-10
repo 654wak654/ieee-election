@@ -1,0 +1,22 @@
+# Example /etc/caddy/Caddyfile
+# !!!! Configure this before deployment (both docker and non-docker) !!!!
+
+127.0.0.1:80
+
+rewrite /admin-login /index.html
+rewrite /admin-panel /index.html
+rewrite /home /index.html
+rewrite /login /index.html
+
+# This is the path from docker's web-files volume
+root * /srv
+encode gzip
+file_server
+
+@websocket {
+    header Connection *Upgrade*
+    header Upgrade websocket
+}
+
+# This is the ieee-election container in docker's default network
+reverse_proxy @websocket ieee-election:{$WS_PORT}

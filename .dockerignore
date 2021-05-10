@@ -1,0 +1,14 @@
+.parcel-cache
+.vscode
+dist
+node_modules
+.dockerignore
+.gitignore
+.env.example
+.eslintrc.json
+.gitignore
+add-admin.mjs
+Caddyfile
+docker-compose.yml
+Dockerfile
+README.md
