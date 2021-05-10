@@ -53,7 +53,7 @@ window.app = () => ({
         // Let production web server handle ws; only use WS_PORT in dev environment
         const port = process.env.NODE_ENV === "development" ? `:${process.env.WS_PORT}` : "";
 
-        this.ws = new WebSocket(`${protocol}://${location.host}${port}`);
+        this.ws = new WebSocket(`${protocol}://${location.hostname}${port}`);
 
         this.ws.addEventListener("open", () => {
             // Some initial route handing
