@@ -102,7 +102,7 @@ function sendKeyMail(user) {
                             Name: user.name
                         }
                     ],
-                    Subject: "IEEE THKÜ Seçim Anahtarı",
+                    Subject: process.env.EMAIL_SUBJECT,
                     HTMLPart: htmlMessage
                 }
             ]
