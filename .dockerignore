@@ -3,8 +3,8 @@
 dist
 node_modules
 .dockerignore
-.gitignore
 .env.example
+.gitignore
 .eslintrc.json
 .gitignore
 add-admin.mjs
