@@ -42,10 +42,6 @@ services:
 
 volumes:
     web-files:
-        name: web-files
     redis-data:
-        name: redis-data
     caddy-data:
-        name: caddy-data
     caddy-config:
-        name: caddy-config
