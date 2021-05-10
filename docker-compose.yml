@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+    ieee-election:
+        container_name: ieee-election
+        build:
+            context: .
+            args:
+                PORT: ${WS_PORT}
+        restart: unless-stopped
+        volumes:
+            - web-files:/usr/src/app/dist
+        depends_on:
+            - redis
+
+    redis:
+        container_name: redis
+        image: bitnami/redis:6.2
+        restart: unless-stopped
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
+        volumes:
+            - redis-data:/bitnami/redis/data
+
+    caddy:
+        container_name: caddy
+        image: caddy:2-alpine
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        environment:
+            - WS_PORT=${WS_PORT}
+        volumes:
+            - web-files:/srv
+            - $PWD/Caddyfile:/etc/caddy/Caddyfile
+            - caddy-data:/data
+            - caddy-config:/config
+        depends_on:
+            - ieee-election
+
+volumes:
+    web-files:
+        name: web-files
+    redis-data:
+        name: redis-data
+    caddy-data:
+        name: caddy-data
+    caddy-config:
+        name: caddy-config
