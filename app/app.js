@@ -195,6 +195,8 @@ window.app = () => ({
                 }
             }
 
+            data.sort((a, b) => a.name.localeCompare(b.name));
+
             t.users = data;
 
             t.initTippy();
