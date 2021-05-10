@@ -47,7 +47,11 @@ window.app = () => ({
             }
         });
 
-        this.ws = new WebSocket(process.env.NODE_ENV !== "development" ? `wss://${location.host}` : "ws://localhost:5452");
+        this.ws = new WebSocket(
+            location.protocol === "https:" ?
+                `wss://${location.host}` :
+                `ws://localhost:${process.env.WS_PORT}`
+        );
 
         this.ws.addEventListener("open", () => {
             // Some initial route handing
