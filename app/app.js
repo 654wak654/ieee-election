@@ -47,11 +47,13 @@ window.app = () => ({
             }
         });
 
-        this.ws = new WebSocket(
-            location.protocol === "https:" ?
-                `wss://${location.host}` :
-                `ws://localhost:${process.env.WS_PORT}`
-        );
+        // Determine ws protocol based on HTTPS
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+
+        // Let production web server handle ws; only use WS_PORT in dev environment
+        const port = process.env.NODE_ENV === "development" ? `:${process.env.WS_PORT}` : "";
+
+        this.ws = new WebSocket(`${protocol}://${location.host}${port}`);
 
         this.ws.addEventListener("open", () => {
             // Some initial route handing
