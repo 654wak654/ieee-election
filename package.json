@@ -9,6 +9,7 @@
         "build": "node clear-dist.mjs && parcel build app/index.html --no-source-maps --public-url './'",
         "dev": "parcel app/index.html --port 5000 --no-cache",
         "start": "node -r dotenv/config server/server.js",
+        "docker": "npm run build && npm start",
         "lint": "eslint server && eslint app/app.js"
     },
     "browserslist": [

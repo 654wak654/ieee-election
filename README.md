@@ -32,5 +32,3 @@ After editing the `.env` and `Caddyfile` files, only thing you need should be:
 ```
 docker-compose up -d
 ```
-
-**Note:** The `web-files` volume has to be removed to update frontend assets. Otherwise docker-compose will use the old volume.
