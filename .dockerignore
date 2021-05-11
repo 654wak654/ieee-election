@@ -5,7 +5,6 @@ node_modules
 .dockerignore
 .env
 .env.example
-.gitignore
 .eslintrc.json
 .gitignore
 add-admin.mjs
