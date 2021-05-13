@@ -21,12 +21,12 @@ const adminMethods = [
     "mailUsage"
 ];
 
-let mailUsage = 0;
+let mailUsageData = null;
 let htmlTemplate = null;
 
 (async () => {
     // Set initial count
-    mailUsage = await getMailUsage();
+    mailUsageData = await getMailUsageData();
 
     // Read it here once so we don't have to re-read it on every mail
     htmlTemplate = await readFile("./server/mail-templates/key-mail.html", { encoding: "utf-8" });
@@ -110,7 +110,7 @@ function sendKeyMail(user) {
     });
 }
 
-async function getMailUsage() {
+async function getMailUsageData() {
     const { body } = await got("https://api.mailjet.com/v3/REST/statcounters", {
         username: process.env.MAILJET_API_KEY,
         password: process.env.MAILJET_SECRET_KEY,
@@ -123,7 +123,10 @@ async function getMailUsage() {
         }
     });
 
-    return body.Count === 0 ? 0 : body.Data[0].MessageSentCount;
+    return {
+        usage: body.Count === 0 ? 0 : body.Data[0].MessageSentCount,
+        dailyMax: 200
+    };
 }
 
 class Endpoint {
@@ -269,10 +272,10 @@ class Endpoint {
 
         await sendKeyMail(user);
 
-        const data = await getMailUsage();
+        const data = await getMailUsageData();
 
-        if (data !== mailUsage) {
-            mailUsage = data;
+        if (data.usage !== mailUsageData.usage) {
+            mailUsageData = data;
 
             for (const sub of subs.mailUsage) {
                 sub.send(JSON.stringify({ topic: "mailUsage", data }));
@@ -319,7 +322,7 @@ class Endpoint {
     mailUsage() {
         subs.mailUsage.push(this.ws);
 
-        return mailUsage;
+        return mailUsageData;
     }
 
     async castVote({ committeeId, candidateName }, token) {

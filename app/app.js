@@ -156,7 +156,7 @@ window.app = () => ({
         this.$watch("modalCommittee", () => this.userSearch = "");
 
         this.subTo("mailUsage", (t, data) => {
-            t.mailUsage = `Mail kullanımı: ${data}/200`;
+            t.mailUsage = `Mail kullanımı: ${data.usage}/${data.dailyMax}`;
         });
 
         this.subTo("committees", (t, data) => {
